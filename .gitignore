@@ -12,3 +12,7 @@ data/tmp/
 
 # Models are tracked (small) — comment out next line if they grow large
 # models/*.pkl
+
+# Local agent tooling (symlinks into venv)
+.agents/
+.claude/
