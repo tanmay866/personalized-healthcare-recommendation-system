@@ -1,0 +1,13 @@
+{
+  "best_model": "RandomForest",
+  "cv_accuracy": 1.0,
+  "test_accuracy": 1.0,
+  "n_symptoms": 132,
+  "n_diseases": 41,
+  "all_cv_scores": {
+    "RandomForest": 1.0,
+    "SVM": 1.0,
+    "NaiveBayes": 1.0,
+    "XGBoost": 0.9987
+  }
+}

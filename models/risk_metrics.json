@@ -1,0 +1,21 @@
+{
+  "target": "outcome_variable",
+  "best_model": "RandomForest",
+  "cv_accuracy": 0.7042,
+  "test_accuracy": 0.7667,
+  "majority_baseline": 0.5233,
+  "features": [
+    "fever",
+    "cough",
+    "fatigue",
+    "difficulty_breathing",
+    "age",
+    "gender",
+    "blood_pressure",
+    "cholesterol_level"
+  ],
+  "classes": [
+    "Negative",
+    "Positive"
+  ]
+}

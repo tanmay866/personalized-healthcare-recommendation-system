@@ -1,0 +1,14 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# Data (keep raw + processed small CSVs tracked; ignore large/temp)
+data/tmp/
+
+# Models are tracked (small) — comment out next line if they grow large
+# models/*.pkl

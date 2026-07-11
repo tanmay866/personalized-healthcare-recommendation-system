@@ -1,0 +1,862 @@
+{
+  "(vertigo) Paroymsal  Positional Vertigo": {
+    "description": "A form of dizziness caused by tiny crystals in the inner ear disturbing balance.",
+    "medications": [
+      "Betahistine",
+      "Meclizine (antihistamine)",
+      "Prochlorperazine"
+    ],
+    "precautions": [
+      "Avoid sudden head movements",
+      "Sit down when dizzy",
+      "Use support when walking",
+      "Do Epley maneuver exercises"
+    ],
+    "diet": [
+      "Stay hydrated",
+      "Reduce salt intake",
+      "Avoid caffeine and alcohol"
+    ],
+    "workout": "Vestibular rehabilitation and balance exercises (Brandt-Daroff).",
+    "specialist": "ENT Specialist / Neurologist"
+  },
+  "AIDS": {
+    "description": "Advanced HIV infection that severely weakens the immune system.",
+    "medications": [
+      "Antiretroviral Therapy (ART)",
+      "Prophylactic antibiotics for infections"
+    ],
+    "precautions": [
+      "Adhere strictly to ART",
+      "Avoid infections",
+      "Practice safe sex",
+      "Regular CD4/viral load monitoring"
+    ],
+    "diet": [
+      "High-protein balanced meals",
+      "Plenty of fruits and vegetables",
+      "Safe, clean water and food"
+    ],
+    "workout": "Moderate regular exercise to maintain strength and immunity.",
+    "specialist": "Infectious Disease Specialist"
+  },
+  "Acne": {
+    "description": "A skin condition where hair follicles clog with oil and dead skin cells.",
+    "medications": [
+      "Benzoyl peroxide",
+      "Topical retinoids",
+      "Topical/oral antibiotics"
+    ],
+    "precautions": [
+      "Wash face twice daily",
+      "Avoid touching/popping pimples",
+      "Use non-comedogenic products",
+      "Remove makeup before bed"
+    ],
+    "diet": [
+      "Low-glycemic foods",
+      "Reduce dairy and sugar",
+      "Drink plenty of water"
+    ],
+    "workout": "Regular exercise to reduce stress; shower promptly after sweating.",
+    "specialist": "Dermatologist"
+  },
+  "Alcoholic hepatitis": {
+    "description": "Liver inflammation caused by excessive alcohol consumption.",
+    "medications": [
+      "Corticosteroids (severe cases)",
+      "Vitamin/thiamine supplements",
+      "Pentoxifylline"
+    ],
+    "precautions": [
+      "Stop alcohol completely",
+      "Regular liver function tests",
+      "Avoid hepatotoxic drugs",
+      "Rest adequately"
+    ],
+    "diet": [
+      "High-calorie high-protein diet",
+      "Vitamin-rich foods",
+      "Avoid alcohol and fatty foods"
+    ],
+    "workout": "Light activity as tolerated; prioritize rest and recovery.",
+    "specialist": "Hepatologist / Gastroenterologist"
+  },
+  "Allergy": {
+    "description": "An immune reaction to substances such as pollen, dust, or certain foods.",
+    "medications": [
+      "Antihistamines",
+      "Decongestants",
+      "Corticosteroid nasal sprays"
+    ],
+    "precautions": [
+      "Identify and avoid allergens",
+      "Keep home dust-free",
+      "Use air purifiers",
+      "Carry prescribed medication"
+    ],
+    "diet": [
+      "Avoid known food triggers",
+      "Anti-inflammatory foods",
+      "Vitamin-C rich fruits"
+    ],
+    "workout": "Indoor exercise on high-pollen days; stay active to boost immunity.",
+    "specialist": "Allergist / Immunologist"
+  },
+  "Arthritis": {
+    "description": "Inflammation of one or more joints causing pain and stiffness.",
+    "medications": [
+      "NSAIDs",
+      "DMARDs",
+      "Corticosteroids"
+    ],
+    "precautions": [
+      "Keep joints moving gently",
+      "Maintain healthy weight",
+      "Apply hot/cold packs",
+      "Avoid overexertion"
+    ],
+    "diet": [
+      "Omega-3 rich foods",
+      "Anti-inflammatory diet",
+      "Reduce processed foods"
+    ],
+    "workout": "Low-impact exercise: swimming, cycling, stretching.",
+    "specialist": "Rheumatologist"
+  },
+  "Bronchial Asthma": {
+    "description": "A chronic condition where airways narrow and swell, causing breathing difficulty.",
+    "medications": [
+      "Inhaled bronchodilators (e.g., salbutamol)",
+      "Inhaled corticosteroids",
+      "Leukotriene modifiers"
+    ],
+    "precautions": [
+      "Avoid triggers (dust, smoke)",
+      "Carry a reliever inhaler",
+      "Use prescribed preventers",
+      "Get vaccinated for flu"
+    ],
+    "diet": [
+      "Vitamin-D and magnesium rich foods",
+      "Avoid sulfite-heavy foods",
+      "Stay hydrated"
+    ],
+    "workout": "Breathing exercises and gentle aerobic activity; warm up properly.",
+    "specialist": "Pulmonologist"
+  },
+  "Cervical spondylosis": {
+    "description": "Age-related wear of the discs and joints in the neck (cervical spine).",
+    "medications": [
+      "NSAIDs",
+      "Muscle relaxants",
+      "Nerve pain medication"
+    ],
+    "precautions": [
+      "Maintain good posture",
+      "Avoid long screen hours",
+      "Use a supportive pillow",
+      "Gentle neck exercises"
+    ],
+    "diet": [
+      "Calcium and vitamin-D rich foods",
+      "Anti-inflammatory diet",
+      "Stay hydrated"
+    ],
+    "workout": "Neck stretches, posture correction, and physiotherapy exercises.",
+    "specialist": "Orthopedic Specialist / Neurologist"
+  },
+  "Chicken pox": {
+    "description": "A highly contagious viral infection causing an itchy, blister-like rash.",
+    "medications": [
+      "Antihistamines for itching",
+      "Acyclovir (antiviral)",
+      "Paracetamol for fever"
+    ],
+    "precautions": [
+      "Isolate to prevent spread",
+      "Avoid scratching",
+      "Keep skin clean and cool",
+      "Trim fingernails"
+    ],
+    "diet": [
+      "Soft bland foods",
+      "Plenty of fluids",
+      "Avoid spicy/salty foods"
+    ],
+    "workout": "Rest until recovery; resume activity gradually.",
+    "specialist": "General Physician / Dermatologist"
+  },
+  "Chronic cholestasis": {
+    "description": "Reduced or blocked bile flow from the liver, causing itching and jaundice.",
+    "medications": [
+      "Ursodeoxycholic acid",
+      "Cholestyramine for itching",
+      "Fat-soluble vitamin supplements"
+    ],
+    "precautions": [
+      "Avoid alcohol",
+      "Regular liver monitoring",
+      "Avoid fatty foods",
+      "Manage itching with cool baths"
+    ],
+    "diet": [
+      "Low-fat diet",
+      "Fat-soluble vitamins (A, D, E, K)",
+      "Small frequent meals"
+    ],
+    "workout": "Light regular activity as tolerated.",
+    "specialist": "Hepatologist / Gastroenterologist"
+  },
+  "Common Cold": {
+    "description": "A mild viral infection of the nose and throat.",
+    "medications": [
+      "Decongestants",
+      "Antihistamines",
+      "Paracetamol for aches"
+    ],
+    "precautions": [
+      "Rest well",
+      "Wash hands frequently",
+      "Cover mouth when sneezing",
+      "Stay warm"
+    ],
+    "diet": [
+      "Warm fluids and soups",
+      "Vitamin-C rich fruits",
+      "Honey and ginger tea"
+    ],
+    "workout": "Rest; light walking once symptoms ease.",
+    "specialist": "General Physician"
+  },
+  "Dengue": {
+    "description": "A mosquito-borne viral infection causing high fever and body pain.",
+    "medications": [
+      "Paracetamol for fever (avoid NSAIDs)",
+      "IV fluids in severe cases",
+      "Oral rehydration"
+    ],
+    "precautions": [
+      "Prevent mosquito bites",
+      "Monitor platelet count",
+      "Stay hydrated",
+      "Seek care if bleeding/worsening"
+    ],
+    "diet": [
+      "Papaya leaf extract (traditional)",
+      "Plenty of fluids",
+      "Soft easily digestible foods"
+    ],
+    "workout": "Complete rest during illness; recover gradually.",
+    "specialist": "General Physician / Infectious Disease Specialist"
+  },
+  "Diabetes": {
+    "description": "A chronic condition affecting how the body regulates blood sugar.",
+    "medications": [
+      "Metformin",
+      "Insulin (as prescribed)",
+      "Other oral hypoglycemics"
+    ],
+    "precautions": [
+      "Monitor blood sugar regularly",
+      "Foot care",
+      "Regular eye check-ups",
+      "Take medication on time"
+    ],
+    "diet": [
+      "Low-glycemic, high-fiber foods",
+      "Control carbohydrate intake",
+      "Avoid sugary drinks"
+    ],
+    "workout": "At least 30 min of moderate exercise most days (walking, cycling).",
+    "specialist": "Endocrinologist / Diabetologist"
+  },
+  "Dimorphic hemmorhoids(piles)": {
+    "description": "Swollen veins in the lower rectum and anus causing pain and bleeding.",
+    "medications": [
+      "Topical creams/ointments",
+      "Stool softeners",
+      "Fiber supplements"
+    ],
+    "precautions": [
+      "Avoid straining",
+      "Don't sit for long periods",
+      "Maintain hygiene",
+      "Warm sitz baths"
+    ],
+    "diet": [
+      "High-fiber foods",
+      "Plenty of water",
+      "Avoid spicy foods"
+    ],
+    "workout": "Regular light exercise to improve bowel movement; avoid heavy lifting.",
+    "specialist": "Proctologist / General Surgeon"
+  },
+  "Drug Reaction": {
+    "description": "An adverse reaction of the body to a medication.",
+    "medications": [
+      "Stop the offending drug",
+      "Antihistamines",
+      "Corticosteroids (as prescribed)"
+    ],
+    "precautions": [
+      "Discontinue suspected drug",
+      "Note and report allergies",
+      "Seek urgent care if severe",
+      "Carry an allergy card"
+    ],
+    "diet": [
+      "Stay hydrated",
+      "Light, easily digestible foods",
+      "Avoid new/unknown supplements"
+    ],
+    "workout": "Rest until the reaction resolves.",
+    "specialist": "Allergist / General Physician"
+  },
+  "Fungal infection": {
+    "description": "A skin infection caused by fungi, often itchy and red.",
+    "medications": [
+      "Topical antifungal creams",
+      "Oral antifungals (severe)",
+      "Antifungal powders"
+    ],
+    "precautions": [
+      "Keep skin dry and clean",
+      "Avoid sharing personal items",
+      "Wear breathable clothing",
+      "Change damp clothes promptly"
+    ],
+    "diet": [
+      "Reduce sugar intake",
+      "Probiotic-rich foods",
+      "Garlic and immune-supporting foods"
+    ],
+    "workout": "Shower and dry thoroughly after sweating.",
+    "specialist": "Dermatologist"
+  },
+  "GERD": {
+    "description": "Gastroesophageal reflux disease \u2014 stomach acid frequently flows back into the esophagus.",
+    "medications": [
+      "Proton pump inhibitors",
+      "H2 blockers",
+      "Antacids"
+    ],
+    "precautions": [
+      "Avoid lying down after meals",
+      "Elevate head while sleeping",
+      "Avoid trigger foods",
+      "Eat smaller meals"
+    ],
+    "diet": [
+      "Low-acid foods",
+      "Avoid spicy/fatty/caffeine",
+      "Small frequent meals"
+    ],
+    "workout": "Light activity; avoid exercising right after eating.",
+    "specialist": "Gastroenterologist"
+  },
+  "Gastroenteritis": {
+    "description": "Inflammation of the stomach and intestines, usually from infection.",
+    "medications": [
+      "Oral rehydration solution",
+      "Anti-diarrheals (as advised)",
+      "Probiotics"
+    ],
+    "precautions": [
+      "Stay hydrated",
+      "Wash hands often",
+      "Rest",
+      "Avoid solid food until settled"
+    ],
+    "diet": [
+      "BRAT diet (banana, rice, applesauce, toast)",
+      "Plenty of fluids",
+      "Avoid dairy and fatty foods"
+    ],
+    "workout": "Rest until recovered; rehydrate well.",
+    "specialist": "Gastroenterologist / General Physician"
+  },
+  "Heart attack": {
+    "description": "A medical emergency where blood flow to the heart is blocked.",
+    "medications": [
+      "Aspirin",
+      "Thrombolytics/anticoagulants",
+      "Statins and beta-blockers (follow-up)"
+    ],
+    "precautions": [
+      "Call emergency services immediately",
+      "Chew aspirin if advised",
+      "Cardiac rehab after recovery",
+      "Regular cardiology follow-up"
+    ],
+    "diet": [
+      "Heart-healthy low-sodium diet",
+      "Omega-3 rich foods",
+      "Avoid trans/saturated fats"
+    ],
+    "workout": "Supervised cardiac rehabilitation; gradual return to activity.",
+    "specialist": "Cardiologist (EMERGENCY \u2014 seek immediate care)"
+  },
+  "Hepatitis B": {
+    "description": "A viral infection of the liver spread through blood and body fluids.",
+    "medications": [
+      "Antiviral drugs (e.g., tenofovir, entecavir)",
+      "Interferon therapy",
+      "Supportive care"
+    ],
+    "precautions": [
+      "Get vaccinated (prevention)",
+      "Avoid alcohol",
+      "Practice safe sex",
+      "Regular liver monitoring"
+    ],
+    "diet": [
+      "Balanced liver-friendly diet",
+      "Avoid alcohol and fatty foods",
+      "Adequate protein"
+    ],
+    "workout": "Moderate activity as tolerated.",
+    "specialist": "Hepatologist / Gastroenterologist"
+  },
+  "Hepatitis C": {
+    "description": "A blood-borne viral infection that can cause chronic liver disease.",
+    "medications": [
+      "Direct-acting antivirals (DAAs)",
+      "Supportive care",
+      "Liver-protective measures"
+    ],
+    "precautions": [
+      "Avoid sharing needles/razors",
+      "Avoid alcohol",
+      "Regular liver monitoring",
+      "Safe medical practices"
+    ],
+    "diet": [
+      "Liver-friendly balanced diet",
+      "Avoid alcohol",
+      "Adequate hydration"
+    ],
+    "workout": "Regular moderate exercise as tolerated.",
+    "specialist": "Hepatologist / Gastroenterologist"
+  },
+  "Hepatitis D": {
+    "description": "A liver infection that only occurs in people already infected with Hepatitis B.",
+    "medications": [
+      "Pegylated interferon",
+      "Manage underlying Hepatitis B",
+      "Supportive care"
+    ],
+    "precautions": [
+      "Hepatitis B vaccination (prevention)",
+      "Avoid alcohol",
+      "Regular monitoring",
+      "Safe practices"
+    ],
+    "diet": [
+      "Liver-friendly diet",
+      "Avoid alcohol",
+      "Nutrient-dense foods"
+    ],
+    "workout": "Light to moderate activity as tolerated.",
+    "specialist": "Hepatologist"
+  },
+  "Hepatitis E": {
+    "description": "A liver infection usually spread through contaminated water.",
+    "medications": [
+      "Supportive care (usually self-limiting)",
+      "Rest and hydration",
+      "Ribavirin in severe cases"
+    ],
+    "precautions": [
+      "Drink clean/boiled water",
+      "Maintain hygiene",
+      "Avoid alcohol",
+      "Rest adequately"
+    ],
+    "diet": [
+      "Easily digestible foods",
+      "Plenty of clean fluids",
+      "Avoid fatty foods"
+    ],
+    "workout": "Rest during illness; resume gradually.",
+    "specialist": "Hepatologist / General Physician"
+  },
+  "Hypertension": {
+    "description": "Persistently high blood pressure that strains the heart and vessels.",
+    "medications": [
+      "ACE inhibitors/ARBs",
+      "Diuretics",
+      "Calcium channel blockers"
+    ],
+    "precautions": [
+      "Reduce salt intake",
+      "Monitor blood pressure",
+      "Manage stress",
+      "Take medication regularly"
+    ],
+    "diet": [
+      "DASH diet",
+      "Low-sodium foods",
+      "Potassium-rich fruits and vegetables"
+    ],
+    "workout": "Regular aerobic exercise (brisk walking, 30 min/day).",
+    "specialist": "Cardiologist / General Physician"
+  },
+  "Hyperthyroidism": {
+    "description": "An overactive thyroid producing too much thyroid hormone.",
+    "medications": [
+      "Antithyroid drugs (e.g., methimazole)",
+      "Beta-blockers for symptoms",
+      "Radioactive iodine (as advised)"
+    ],
+    "precautions": [
+      "Regular thyroid tests",
+      "Avoid excess iodine",
+      "Manage stress",
+      "Follow medication schedule"
+    ],
+    "diet": [
+      "Adequate calories",
+      "Calcium and vitamin-D rich foods",
+      "Limit iodine-heavy foods"
+    ],
+    "workout": "Gentle exercise; avoid overexertion until controlled.",
+    "specialist": "Endocrinologist"
+  },
+  "Hypoglycemia": {
+    "description": "Abnormally low blood sugar, causing shakiness, sweating, and confusion.",
+    "medications": [
+      "Fast-acting glucose/glucose tablets",
+      "Glucagon (emergency)",
+      "Adjust diabetes medication"
+    ],
+    "precautions": [
+      "Carry quick sugar source",
+      "Eat regular meals",
+      "Monitor blood sugar",
+      "Recognize early symptoms"
+    ],
+    "diet": [
+      "Frequent small balanced meals",
+      "Complex carbohydrates",
+      "Avoid skipping meals"
+    ],
+    "workout": "Exercise with a snack on hand; monitor sugar before/after.",
+    "specialist": "Endocrinologist"
+  },
+  "Hypothyroidism": {
+    "description": "An underactive thyroid producing too little thyroid hormone.",
+    "medications": [
+      "Levothyroxine (thyroid hormone replacement)",
+      "Regular dose adjustment",
+      "Supportive care"
+    ],
+    "precautions": [
+      "Take medication on empty stomach",
+      "Regular thyroid tests",
+      "Consistent medication timing",
+      "Monitor weight and energy"
+    ],
+    "diet": [
+      "Iodine-adequate diet",
+      "Selenium-rich foods",
+      "Balanced nutrition"
+    ],
+    "workout": "Regular moderate exercise to support metabolism.",
+    "specialist": "Endocrinologist"
+  },
+  "Impetigo": {
+    "description": "A contagious bacterial skin infection causing red sores and blisters.",
+    "medications": [
+      "Topical antibiotics (mupirocin)",
+      "Oral antibiotics (widespread)",
+      "Antiseptic washes"
+    ],
+    "precautions": [
+      "Keep sores clean and covered",
+      "Avoid scratching",
+      "Don't share towels",
+      "Wash hands frequently"
+    ],
+    "diet": [
+      "Immune-supporting foods",
+      "Vitamin-C and zinc rich foods",
+      "Stay hydrated"
+    ],
+    "workout": "Rest and avoid contact activities until healed.",
+    "specialist": "Dermatologist"
+  },
+  "Jaundice": {
+    "description": "Yellowing of skin and eyes due to high bilirubin, often a liver-related sign.",
+    "medications": [
+      "Treat underlying cause",
+      "Supportive care",
+      "Avoid hepatotoxic drugs"
+    ],
+    "precautions": [
+      "Identify underlying cause",
+      "Avoid alcohol",
+      "Stay hydrated",
+      "Regular liver tests"
+    ],
+    "diet": [
+      "Plenty of fluids",
+      "Easily digestible low-fat foods",
+      "Fresh fruits and vegetables"
+    ],
+    "workout": "Rest during acute phase; light activity as recovery allows.",
+    "specialist": "Hepatologist / Gastroenterologist"
+  },
+  "Malaria": {
+    "description": "A mosquito-borne parasitic infection causing fever and chills.",
+    "medications": [
+      "Antimalarials (e.g., artemisinin combinations)",
+      "Chloroquine (region-dependent)",
+      "Supportive care"
+    ],
+    "precautions": [
+      "Prevent mosquito bites",
+      "Use bed nets",
+      "Complete full medication course",
+      "Seek prompt treatment"
+    ],
+    "diet": [
+      "Plenty of fluids",
+      "Easily digestible energy-rich foods",
+      "Fresh fruits"
+    ],
+    "workout": "Complete rest during illness; recover gradually.",
+    "specialist": "General Physician / Infectious Disease Specialist"
+  },
+  "Migraine": {
+    "description": "A neurological condition causing intense, often one-sided headaches.",
+    "medications": [
+      "Triptans",
+      "NSAIDs/analgesics",
+      "Preventive medication (as advised)"
+    ],
+    "precautions": [
+      "Identify and avoid triggers",
+      "Rest in a dark quiet room",
+      "Maintain sleep routine",
+      "Manage stress"
+    ],
+    "diet": [
+      "Regular meals (avoid skipping)",
+      "Stay hydrated",
+      "Limit caffeine and processed foods"
+    ],
+    "workout": "Regular gentle exercise and relaxation techniques (yoga).",
+    "specialist": "Neurologist"
+  },
+  "Osteoarthristis": {
+    "description": "Degenerative joint disease from cartilage breakdown, causing pain and stiffness.",
+    "medications": [
+      "NSAIDs/analgesics",
+      "Topical pain relief",
+      "Joint supplements (as advised)"
+    ],
+    "precautions": [
+      "Maintain healthy weight",
+      "Protect joints",
+      "Use supportive footwear",
+      "Apply hot/cold packs"
+    ],
+    "diet": [
+      "Anti-inflammatory foods",
+      "Calcium and vitamin-D rich foods",
+      "Omega-3 rich foods"
+    ],
+    "workout": "Low-impact exercise: swimming, cycling, physiotherapy.",
+    "specialist": "Orthopedic Specialist / Rheumatologist"
+  },
+  "Paralysis (brain hemorrhage)": {
+    "description": "Loss of muscle function due to bleeding in the brain \u2014 a medical emergency.",
+    "medications": [
+      "Emergency neurosurgical care",
+      "Blood pressure control",
+      "Rehabilitation therapy"
+    ],
+    "precautions": [
+      "Seek emergency care immediately",
+      "Control blood pressure",
+      "Follow rehabilitation plan",
+      "Prevent falls"
+    ],
+    "diet": [
+      "Balanced brain-healthy diet",
+      "Low-sodium foods",
+      "Adequate hydration"
+    ],
+    "workout": "Physiotherapy and supervised rehabilitation exercises.",
+    "specialist": "Neurologist / Neurosurgeon (EMERGENCY)"
+  },
+  "Peptic ulcer diseae": {
+    "description": "Open sores in the stomach lining or upper small intestine.",
+    "medications": [
+      "Proton pump inhibitors",
+      "Antibiotics (if H. pylori)",
+      "Antacids"
+    ],
+    "precautions": [
+      "Avoid NSAIDs",
+      "Limit alcohol and smoking",
+      "Manage stress",
+      "Eat regular meals"
+    ],
+    "diet": [
+      "Avoid spicy/acidic foods",
+      "Small frequent meals",
+      "Include fiber-rich foods"
+    ],
+    "workout": "Light regular activity; stress-reducing exercise.",
+    "specialist": "Gastroenterologist"
+  },
+  "Pneumonia": {
+    "description": "Infection that inflames the air sacs in the lungs, causing cough and fever.",
+    "medications": [
+      "Antibiotics (bacterial)",
+      "Antivirals (viral)",
+      "Fever and cough relief"
+    ],
+    "precautions": [
+      "Complete antibiotic course",
+      "Rest well",
+      "Stay hydrated",
+      "Get vaccinated (prevention)"
+    ],
+    "diet": [
+      "Warm fluids and soups",
+      "Protein-rich foods",
+      "Vitamin-C rich fruits"
+    ],
+    "workout": "Rest during illness; breathing exercises during recovery.",
+    "specialist": "Pulmonologist / General Physician"
+  },
+  "Psoriasis": {
+    "description": "An autoimmune skin condition causing scaly, itchy patches.",
+    "medications": [
+      "Topical corticosteroids",
+      "Vitamin-D analogs",
+      "Phototherapy/systemic drugs (severe)"
+    ],
+    "precautions": [
+      "Moisturize regularly",
+      "Avoid triggers (stress, injury)",
+      "Limit alcohol",
+      "Gentle skincare"
+    ],
+    "diet": [
+      "Anti-inflammatory diet",
+      "Omega-3 rich foods",
+      "Reduce processed foods"
+    ],
+    "workout": "Regular exercise to reduce stress and inflammation.",
+    "specialist": "Dermatologist"
+  },
+  "Tuberculosis": {
+    "description": "A bacterial infection that mainly affects the lungs and spreads through the air.",
+    "medications": [
+      "Anti-TB regimen (isoniazid, rifampicin, etc.)",
+      "Directly observed therapy (DOTS)",
+      "Complete 6+ month course"
+    ],
+    "precautions": [
+      "Complete full treatment course",
+      "Cover mouth when coughing",
+      "Ensure ventilation",
+      "Regular follow-up"
+    ],
+    "diet": [
+      "High-protein high-calorie diet",
+      "Vitamin-rich foods",
+      "Adequate hydration"
+    ],
+    "workout": "Rest early; gradual light activity as strength returns.",
+    "specialist": "Pulmonologist / Infectious Disease Specialist"
+  },
+  "Typhoid": {
+    "description": "A bacterial infection from contaminated food or water causing sustained fever.",
+    "medications": [
+      "Antibiotics (as prescribed)",
+      "Fever management",
+      "Oral/IV rehydration"
+    ],
+    "precautions": [
+      "Complete antibiotic course",
+      "Drink clean water",
+      "Maintain hygiene",
+      "Rest well"
+    ],
+    "diet": [
+      "Soft, easily digestible foods",
+      "Plenty of fluids",
+      "High-calorie nutrition"
+    ],
+    "workout": "Complete rest during illness; recover gradually.",
+    "specialist": "General Physician / Infectious Disease Specialist"
+  },
+  "Urinary tract infection": {
+    "description": "An infection in any part of the urinary system, commonly the bladder.",
+    "medications": [
+      "Antibiotics",
+      "Pain relief (phenazopyridine)",
+      "Increased fluids"
+    ],
+    "precautions": [
+      "Drink plenty of water",
+      "Urinate frequently",
+      "Maintain hygiene",
+      "Complete antibiotic course"
+    ],
+    "diet": [
+      "Plenty of water",
+      "Cranberry (supportive)",
+      "Avoid caffeine and alcohol"
+    ],
+    "workout": "Light activity; stay well hydrated.",
+    "specialist": "Urologist / General Physician"
+  },
+  "Varicose veins": {
+    "description": "Enlarged, twisted veins, usually in the legs, from weakened valves.",
+    "medications": [
+      "Compression stockings",
+      "Pain relief",
+      "Sclerotherapy/procedures (severe)"
+    ],
+    "precautions": [
+      "Avoid prolonged standing",
+      "Elevate legs when resting",
+      "Wear compression stockings",
+      "Maintain healthy weight"
+    ],
+    "diet": [
+      "High-fiber foods",
+      "Low-salt diet",
+      "Flavonoid-rich fruits"
+    ],
+    "workout": "Regular leg exercises: walking, cycling, calf raises.",
+    "specialist": "Vascular Surgeon"
+  },
+  "hepatitis A": {
+    "description": "A highly contagious liver infection spread through contaminated food or water.",
+    "medications": [
+      "Supportive care (usually self-limiting)",
+      "Rest and hydration",
+      "Avoid hepatotoxic drugs"
+    ],
+    "precautions": [
+      "Get vaccinated (prevention)",
+      "Maintain hygiene",
+      "Drink clean water",
+      "Avoid alcohol"
+    ],
+    "diet": [
+      "Easily digestible low-fat foods",
+      "Plenty of fluids",
+      "Fresh fruits and vegetables"
+    ],
+    "workout": "Rest during illness; resume activity gradually.",
+    "specialist": "Hepatologist / General Physician"
+  }
+}
