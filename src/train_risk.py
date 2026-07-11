@@ -21,8 +21,14 @@ import json
 import joblib
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
+from sklearn.model_selection import (
+    GridSearchCV,
+    StratifiedKFold,
+    cross_val_score,
+    train_test_split,
+)
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.neural_network import MLPClassifier
 
 from preprocess import load_patient_profile, ROOT
 
@@ -37,7 +43,42 @@ def build_candidates() -> dict:
         ),
         "GradientBoosting": GradientBoostingClassifier(random_state=42),
         "LogisticRegression": LogisticRegression(max_iter=1000, random_state=42),
+        "NeuralNet (MLP)": MLPClassifier(
+            hidden_layer_sizes=(64, 32),
+            activation="relu",
+            max_iter=500,
+            early_stopping=True,
+            random_state=42,
+        ),
     }
+
+
+def tune_best(name: str, X_train, y_train, cv) -> tuple:
+    """Grid-search the winning model family for a final accuracy squeeze."""
+    grids = {
+        "RandomForest": (
+            RandomForestClassifier(random_state=42, n_jobs=-1),
+            {
+                "n_estimators": [200, 400],
+                "max_depth": [6, 8, 12, None],
+                "min_samples_leaf": [1, 2, 4],
+            },
+        ),
+        "GradientBoosting": (
+            GradientBoostingClassifier(random_state=42),
+            {
+                "n_estimators": [100, 200],
+                "learning_rate": [0.05, 0.1],
+                "max_depth": [2, 3, 4],
+            },
+        ),
+    }
+    if name not in grids:
+        return None, None
+    est, grid = grids[name]
+    gs = GridSearchCV(est, grid, cv=cv, scoring="accuracy", n_jobs=-1)
+    gs.fit(X_train, y_train)
+    return gs.best_estimator_, gs.best_params_
 
 
 TARGET = "outcome_variable"
@@ -63,7 +104,20 @@ def main() -> None:
         print(f"{name:<20}{scores.mean():>10.4f}{scores.std():>10.4f}")
 
     best_name = max(results, key=results.get)
-    best = build_candidates()[best_name]
+
+    # Hyperparameter tuning on the winning family.
+    tuned, best_params = tune_best(best_name, X_train, y_train, cv)
+    if tuned is not None:
+        tuned_cv = cross_val_score(tuned, X_train, y_train, cv=cv).mean()
+        print(f"\nTuned {best_name}: CV {tuned_cv:.4f} (was {results[best_name]:.4f})  params={best_params}")
+        if tuned_cv >= results[best_name]:
+            best = tuned
+            results[best_name] = tuned_cv
+        else:
+            best = build_candidates()[best_name]
+    else:
+        best = build_candidates()[best_name]
+
     best.fit(X_train, y_train)
     y_pred = best.predict(X_test)
     test_acc = accuracy_score(y_test, y_pred)

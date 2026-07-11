@@ -1,8 +1,8 @@
 {
   "target": "outcome_variable",
   "best_model": "RandomForest",
-  "cv_accuracy": 0.7042,
-  "test_accuracy": 0.7667,
+  "cv_accuracy": 0.7083,
+  "test_accuracy": 0.8,
   "majority_baseline": 0.5233,
   "features": [
     "fever",

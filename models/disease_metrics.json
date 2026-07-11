@@ -8,6 +8,7 @@
     "RandomForest": 1.0,
     "SVM": 1.0,
     "NaiveBayes": 1.0,
-    "XGBoost": 0.9987
+    "XGBoost": 0.9987,
+    "NeuralNet (MLP)": 1.0
   }
 }

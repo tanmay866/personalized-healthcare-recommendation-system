@@ -168,6 +168,24 @@ def predict_risk(profile: dict) -> dict:
 
 
 # --------------------------------------------------------------------------- #
+# Content-based filtering: related diseases by symptom-profile similarity
+# --------------------------------------------------------------------------- #
+@lru_cache(maxsize=1)
+def _similarity_map() -> dict:
+    p = MODELS / "disease_similarity.json"
+    return json.loads(p.read_text()) if p.exists() else {}
+
+
+def related_diseases(disease: str, top_n: int = 3) -> list[dict]:
+    """Content-based filtering: diseases with the most similar symptom profiles.
+
+    Similarity = cosine similarity between mean symptom vectors, precomputed at
+    training time. Returns [{disease, similarity}, ...].
+    """
+    return _similarity_map().get(disease, [])[:top_n]
+
+
+# --------------------------------------------------------------------------- #
 # Drug-review sentiment (NLP feature)
 # --------------------------------------------------------------------------- #
 @lru_cache(maxsize=1)
@@ -193,12 +211,18 @@ def get_drug_sentiment(disease: str, top_n: int = 8) -> pd.DataFrame | None:
     if rows.empty:
         return None
 
+    # Hybrid ranking: blend the NLP sentiment of the review text (crowd /
+    # collaborative signal) with the explicit star rating (content signal).
+    rows["hybrid_score"] = (
+        0.6 * rows["sentiment_score"] + 0.4 * (rows["avg_rating"] / 10.0)
+    ).round(4)
+
     # A drug can appear under multiple mapped conditions — keep its best row,
-    # then rank by sentiment with review count as a stabilizer.
-    rows = rows.sort_values("sentiment_score", ascending=False)
+    # then rank by the hybrid score with review count as a stabilizer.
+    rows = rows.sort_values("hybrid_score", ascending=False)
     rows = rows.drop_duplicates(subset="drugName", keep="first")
     rows = rows.sort_values(
-        ["sentiment_score", "n_reviews"], ascending=[False, False]
+        ["hybrid_score", "n_reviews"], ascending=[False, False]
     ).head(top_n)
     return rows.reset_index(drop=True)
 

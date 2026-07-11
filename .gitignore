@@ -10,6 +10,10 @@ __pycache__/
 # Data (keep raw + processed small CSVs tracked; ignore large/temp)
 data/tmp/
 
+# Runtime user data (accounts, activity log) — never commit
+data/users.json
+data/user_activity.json
+
 # Models are tracked (small) — comment out next line if they grow large
 # models/*.pkl
 

@@ -19,6 +19,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from xgboost import XGBClassifier
 from sklearn.preprocessing import LabelEncoder
@@ -45,6 +46,16 @@ def build_candidates() -> dict:
             eval_metric="mlogloss",
             random_state=42,
             n_jobs=-1,
+        ),
+        # Neural network (deep learning): two hidden layers of 128 and 64 units,
+        # mirroring the architecture suggested in the project brief
+        # (Dense(128, relu) -> Dense(64, relu) -> output).
+        "NeuralNet (MLP)": MLPClassifier(
+            hidden_layer_sizes=(128, 64),
+            activation="relu",
+            max_iter=300,
+            early_stopping=True,
+            random_state=42,
         ),
     }
 
@@ -85,6 +96,28 @@ def main() -> None:
             y_test, y_pred, target_names=le.classes_, zero_division=0
         )
     )
+
+    # ------------------------------------------------------------------ #
+    # Content-based filtering artifact: cosine similarity between disease
+    # symptom profiles (mean symptom vector per disease). Powers the
+    # "related diseases" feature in the app.
+    # ------------------------------------------------------------------ #
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    profiles = X.copy()
+    profiles["_disease"] = y.values
+    profiles = profiles.groupby("_disease").mean()
+    sim = cosine_similarity(profiles.values)
+    diseases = list(profiles.index)
+    similar: dict[str, list] = {}
+    for i, d in enumerate(diseases):
+        order = np.argsort(sim[i])[::-1]
+        similar[d] = [
+            {"disease": diseases[j], "similarity": round(float(sim[i][j]), 4)}
+            for j in order
+            if diseases[j] != d
+        ][:5]
+    (MODELS / "disease_similarity.json").write_text(json.dumps(similar, indent=2))
 
     # Persist everything inference needs.
     joblib.dump(best, MODELS / "disease_model.pkl")

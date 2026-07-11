@@ -1,13 +1,21 @@
 """
 Personalized Healthcare & Medicine Recommendation System — Streamlit app.
 
-Two tools in one interface:
-  1. Disease Prediction  — enter symptoms -> predicted disease + medicine /
-     precaution / diet / workout / specialist recommendations.
-  2. Health Risk Screening — enter symptoms + vitals -> likelihood of a
-     positive diagnosis (personalized outcome model).
+Features
+--------
+* User management: signup/login (salted-hash passwords), Admin/User roles,
+  per-user health profile.
+* Disease Prediction: symptoms -> predicted disease + care recommendations
+  (medicines, precautions, diet, workout, specialist) + related diseases
+  (content-based filtering) + real medicines ranked by a hybrid
+  sentiment/rating score (NLP on 200K+ patient reviews).
+* Health Risk Screening: symptoms + vitals -> likelihood of positive diagnosis.
+* Medicine Sentiment Explorer: per-condition drug rankings + live NLP demo.
+* Analytics Dashboard: usage trends, disease popularity, model performance,
+  dataset insights; admins additionally see user activity.
 
 Run:  streamlit run app/app.py
+Default admin: admin / admin123
 """
 
 from __future__ import annotations
@@ -16,6 +24,7 @@ import json
 import sys
 from pathlib import Path
 
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -23,19 +32,29 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from auth import (  # noqa: E402
+    get_events,
+    get_profile,
+    list_users,
+    log_event,
+    register_user,
+    update_profile,
+    verify_user,
+)
 from recommend import (  # noqa: E402
     condition_sentiment,
     get_drug_sentiment,
-    get_recommendation,
     humanize,
     list_sentiment_conditions,
     list_symptoms,
     predict_disease,
     predict_risk,
+    related_diseases,
     sentiment_conditions_for,
 )
 
 MODELS = ROOT / "models"
+ACCENT = "#2563eb"
 
 st.set_page_config(
     page_title="Healthcare Recommendation System",
@@ -50,8 +69,10 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-      .main-title { font-size: 2.3rem; font-weight: 800; margin-bottom: 0; }
-      .subtitle { color: #6b7280; margin-top: 0.2rem; font-size: 1rem; }
+      .main-title { font-size: 2.2rem; font-weight: 800; margin-bottom: 0;
+                    background: linear-gradient(90deg, #1d4ed8, #0ea5e9);
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      .subtitle { color: #64748b; margin-top: 0.15rem; font-size: 1rem; }
       .rec-card {
           background: rgba(37, 99, 235, 0.06);
           border-left: 4px solid #2563eb;
@@ -62,10 +83,20 @@ st.markdown(
           display:inline-block; background:#2563eb; color:#fff;
           padding:2px 10px; border-radius:999px; font-size:0.8rem; margin:2px;
       }
+      .pill-ghost {
+          display:inline-block; border:1px solid #2563eb; color:#2563eb;
+          padding:2px 10px; border-radius:999px; font-size:0.8rem; margin:2px;
+      }
       .disclaimer {
           background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220,38,38,0.3);
           border-radius: 8px; padding: 0.7rem 1rem; font-size: 0.85rem; color:#b91c1c;
       }
+      .role-badge {
+          display:inline-block; background:#0ea5e9; color:#fff; font-size:0.72rem;
+          padding:1px 8px; border-radius:999px; vertical-align:middle; margin-left:6px;
+      }
+      .footer { color:#94a3b8; font-size:0.8rem; text-align:center;
+                margin-top:2.5rem; border-top:1px solid #e2e8f0; padding-top:0.8rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -82,6 +113,20 @@ def _metrics() -> dict:
     return out
 
 
+@st.cache_data
+def _dataset_insights() -> dict:
+    """Lightweight stats about the training data for the dashboard."""
+    df = pd.read_csv(ROOT / "data" / "raw" / "disease_symptoms.csv")
+    df = df.loc[:, ~df.columns.str.startswith("Unnamed")].dropna(axis=1, how="all")
+    sym = df.drop(columns=["prognosis"]).sum().sort_values(ascending=False)
+    return {
+        "n_records": len(df),
+        "n_diseases": df["prognosis"].nunique(),
+        "n_symptoms": df.shape[1] - 1,
+        "top_symptoms": sym.head(15),
+    }
+
+
 def _rec_card(title: str, items, is_list: bool = True) -> None:
     if not items:
         return
@@ -91,21 +136,110 @@ def _rec_card(title: str, items, is_list: bool = True) -> None:
         body = "".join(f'<span class="pill">{i}</span>' for i in items)
     else:
         body = f"<p style='margin:0'>{items}</p>"
+    st.markdown(f'<div class="rec-card"><h4>{title}</h4>{body}</div>', unsafe_allow_html=True)
+
+
+def _bar(x, y, title, color=ACCENT, height=300, xaxis="", horizontal=True):
+    fig = go.Figure(
+        go.Bar(
+            x=x, y=y, orientation="h" if horizontal else "v", marker_color=color,
+        )
+    )
+    fig.update_layout(title=title, height=height, margin=dict(l=10, r=10, t=40, b=10), xaxis_title=xaxis)
+    return fig
+
+
+# =========================================================================== #
+# Authentication gate
+# =========================================================================== #
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+if st.session_state.user is None:
+    st.markdown('<p class="main-title">🩺 Personalized Healthcare & Medicine Recommendation System</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">ML-powered disease prediction, medicine recommendations, risk screening & review-sentiment analytics.</p>', unsafe_allow_html=True)
+    st.write("")
+
+    left, right = st.columns([1.1, 1])
+    with left:
+        login_tab, signup_tab = st.tabs(["🔐 Log in", "✨ Sign up"])
+        with login_tab:
+            with st.form("login", border=True):
+                u = st.text_input("Username")
+                p = st.text_input("Password", type="password")
+                if st.form_submit_button("Log in", type="primary", width="stretch"):
+                    user = verify_user(u, p)
+                    if user:
+                        st.session_state.user = user
+                        log_event(user["username"], "login", {})
+                        st.rerun()
+                    else:
+                        st.error("Invalid username or password.")
+            st.caption("Demo admin account: `admin` / `admin123`")
+        with signup_tab:
+            with st.form("signup", border=True):
+                name = st.text_input("Full name")
+                u2 = st.text_input("Choose a username")
+                p2 = st.text_input("Choose a password", type="password")
+                if st.form_submit_button("Create account", type="primary", width="stretch"):
+                    ok, msg = register_user(u2, name, p2)
+                    (st.success if ok else st.error)(msg)
+    with right:
+        m = _metrics()
+        st.markdown("#### What's inside")
+        cols = st.columns(3)
+        if "disease_metrics.json" in m:
+            cols[0].metric("Disease model", f"{m['disease_metrics.json']['test_accuracy']*100:.0f}%", "41 diseases")
+        if "risk_metrics.json" in m:
+            cols[1].metric("Risk screening", f"{m['risk_metrics.json']['test_accuracy']*100:.0f}%", "vs 52% baseline")
+        if "sentiment_metrics.json" in m:
+            cols[2].metric("NLP sentiment", f"{m['sentiment_metrics.json']['test_accuracy']*100:.0f}%", "215K reviews")
+        st.markdown(
+            """
+            - 🔬 **Disease prediction** from 132 symptoms
+            - 💊 **Medicine, diet & precaution** recommendations
+            - 🔗 **Related diseases** (content-based filtering)
+            - 💬 **Real-medicine rankings** from patient review sentiment (NLP)
+            - 📊 **Personal risk screening** from your vitals
+            - 📈 **Analytics dashboard** with usage trends
+            """
+        )
+        st.markdown(
+            '<div class="disclaimer">⚠️ Educational demo — not medical advice. '
+            "Always consult a qualified doctor.</div>",
+            unsafe_allow_html=True,
+        )
+    st.stop()
+
+user = st.session_state.user
+
+# =========================================================================== #
+# Sidebar (logged in)
+# =========================================================================== #
+with st.sidebar:
     st.markdown(
-        f'<div class="rec-card"><h4>{title}</h4>{body}</div>',
+        f"### 👋 {user['name']}<span class='role-badge'>{user['role']}</span>",
         unsafe_allow_html=True,
     )
+    if st.button("Log out", width="stretch"):
+        st.session_state.user = None
+        st.rerun()
 
+    st.divider()
+    with st.expander("🧾 My health profile", expanded=False):
+        prof = get_profile(user["username"])
+        page = st.number_input("Age", 1, 120, int(prof.get("age", 30)))
+        pgender = st.radio(
+            "Gender", ["Female", "Male"],
+            index=1 if prof.get("gender") == "Male" else 0, horizontal=True,
+        )
+        pbp = st.select_slider("Blood pressure", ["Low", "Normal", "High"], value=prof.get("bp", "Normal"))
+        pchol = st.select_slider("Cholesterol", ["Low", "Normal", "High"], value=prof.get("chol", "Normal"))
+        if st.button("Save profile", width="stretch"):
+            update_profile(user["username"], {"age": int(page), "gender": pgender, "bp": pbp, "chol": pchol})
+            st.success("Profile saved — the Risk tab now uses it.")
 
-# --------------------------------------------------------------------------- #
-# Sidebar
-# --------------------------------------------------------------------------- #
-with st.sidebar:
-    st.header("🩺 About")
-    st.write(
-        "A two-model ML system: **symptom → disease** prediction with care "
-        "recommendations, plus a **personalized risk screening** from vitals."
-    )
+    st.divider()
     m = _metrics()
     if "disease_metrics.json" in m:
         dm = m["disease_metrics.json"]
@@ -122,26 +256,25 @@ with st.sidebar:
     st.divider()
     st.markdown(
         '<div class="disclaimer">⚠️ <b>Disclaimer:</b> Educational demo only. '
-        "Not a substitute for professional medical advice. Always consult a "
-        "qualified doctor.</div>",
+        "Not a substitute for professional medical advice.</div>",
         unsafe_allow_html=True,
     )
 
-
 st.markdown('<p class="main-title">Personalized Healthcare & Medicine Recommendation System</p>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Machine-learning powered disease prediction, care recommendations, and risk screening.</p>', unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Machine-learning powered disease prediction, care recommendations, risk screening and review analytics.</p>', unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(
+tab1, tab2, tab3, tab4 = st.tabs(
     [
-        "🔬  Disease Prediction & Recommendations",
+        "🔬  Disease Prediction",
         "📊  Health Risk Screening",
-        "💬  Medicine Sentiment Explorer",
+        "💬  Medicine Sentiment",
+        "📈  Analytics Dashboard",
     ]
 )
 
-# --------------------------------------------------------------------------- #
-# Tab 1 — disease prediction
-# --------------------------------------------------------------------------- #
+# =========================================================================== #
+# Tab 1 — disease prediction & recommendations
+# =========================================================================== #
 with tab1:
     st.subheader("Select your symptoms")
     all_symptoms = list_symptoms()
@@ -154,13 +287,17 @@ with tab1:
     )
     chosen = [labels[l] for l in chosen_labels]
 
-    if st.button("🔍 Predict Disease", type="primary", width='stretch'):
+    if st.button("🔍 Predict Disease", type="primary", width="stretch"):
         if len(chosen) == 0:
             st.warning("Please select at least one symptom.")
         else:
             result = predict_disease(chosen, top_k=3)
             disease = result["disease"]
             conf = result["confidence"]
+            log_event(
+                user["username"], "disease_prediction",
+                {"disease": disease, "confidence": conf, "n_symptoms": len(chosen)},
+            )
 
             c1, c2 = st.columns([1, 1])
             with c1:
@@ -171,6 +308,16 @@ with tab1:
                     st.info(rec["description"])
                 if rec.get("specialist"):
                     st.markdown(f"**👨‍⚕️ Consult:** {rec['specialist']}")
+                related = related_diseases(disease, top_n=3)
+                if related:
+                    pills = "".join(
+                        f'<span class="pill-ghost">{r["disease"]} · {r["similarity"]*100:.0f}%</span>'
+                        for r in related
+                    )
+                    st.markdown(
+                        f'<div class="rec-card"><h4>🔗 Related diseases (similar symptom profiles)</h4>{pills}</div>',
+                        unsafe_allow_html=True,
+                    )
             with c2:
                 top = result["top_k"]
                 fig = go.Figure(
@@ -178,18 +325,16 @@ with tab1:
                         x=[t["probability"] * 100 for t in top][::-1],
                         y=[t["disease"] for t in top][::-1],
                         orientation="h",
-                        marker_color="#2563eb",
+                        marker_color=ACCENT,
                         text=[f"{t['probability']*100:.1f}%" for t in top][::-1],
                         textposition="auto",
                     )
                 )
                 fig.update_layout(
-                    title="Top predictions",
-                    height=250,
-                    margin=dict(l=10, r=10, t=40, b=10),
-                    xaxis_title="Probability (%)",
+                    title="Top predictions", height=250,
+                    margin=dict(l=10, r=10, t=40, b=10), xaxis_title="Probability (%)",
                 )
-                st.plotly_chart(fig, width='stretch')
+                st.plotly_chart(fig, width="stretch")
 
             st.divider()
             st.subheader("💡 Personalized Recommendations")
@@ -202,100 +347,95 @@ with tab1:
             with rc2:
                 _rec_card("🛡️ Precautions", rec.get("precautions"))
 
-            # --- NLP feature: real medicines ranked by patient-review sentiment
+            # Hybrid ranking of real medicines: NLP sentiment + star ratings.
             sent = get_drug_sentiment(disease, top_n=8)
             if sent is not None:
                 st.divider()
-                st.subheader("💬 Top-Rated Real Medicines (by patient sentiment)")
+                st.subheader("💬 Top-Rated Real Medicines (hybrid ranking)")
                 st.caption(
-                    f"Ranked by an NLP sentiment model trained on 200K+ real patient "
-                    f"reviews (drugs.com), for: {', '.join(sentiment_conditions_for(disease))}."
+                    f"Hybrid score = 60% NLP review sentiment + 40% star rating, from 200K+ "
+                    f"real patient reviews (drugs.com), for: {', '.join(sentiment_conditions_for(disease))}."
                 )
                 sc1, sc2 = st.columns([1, 1])
                 with sc1:
                     show = sent.rename(
                         columns={
-                            "drugName": "Medicine",
-                            "condition": "Condition",
-                            "n_reviews": "Reviews",
-                            "avg_rating": "Avg rating (/10)",
-                            "sentiment_score": "Sentiment",
+                            "drugName": "Medicine", "condition": "Condition",
+                            "n_reviews": "Reviews", "avg_rating": "Avg rating (/10)",
+                            "sentiment_score": "Sentiment", "hybrid_score": "Hybrid score",
                         }
-                    )[["Medicine", "Condition", "Reviews", "Avg rating (/10)", "Sentiment"]]
-                    st.dataframe(show, width='stretch', hide_index=True)
+                    )[["Medicine", "Condition", "Reviews", "Avg rating (/10)", "Sentiment", "Hybrid score"]]
+                    st.dataframe(show, width="stretch", hide_index=True)
                 with sc2:
                     sfig = go.Figure(
                         go.Bar(
-                            x=(sent["sentiment_score"] * 100)[::-1],
+                            x=(sent["hybrid_score"] * 100)[::-1],
                             y=sent["drugName"][::-1],
                             orientation="h",
                             marker_color="#10b981",
-                            text=[f"{v*100:.0f}%" for v in sent["sentiment_score"]][::-1],
+                            text=[f"{v*100:.0f}" for v in sent["hybrid_score"]][::-1],
                             textposition="auto",
                         )
                     )
                     sfig.update_layout(
-                        title="Patient sentiment (% positive)",
-                        height=320,
-                        margin=dict(l=10, r=10, t=40, b=10),
-                        xaxis_title="Positive sentiment (%)",
+                        title="Hybrid score (0–100)", height=320,
+                        margin=dict(l=10, r=10, t=40, b=10), xaxis_title="Score",
                     )
-                    st.plotly_chart(sfig, width='stretch')
+                    st.plotly_chart(sfig, width="stretch")
 
             st.markdown(
                 '<div class="disclaimer">⚠️ These recommendations are general and '
-                "educational. Medication names are drug classes, not prescriptions. "
-                "Please consult a licensed physician before taking any action.</div>",
+                "educational. Medication names are drug classes or examples, not "
+                "prescriptions. Please consult a licensed physician.</div>",
                 unsafe_allow_html=True,
             )
 
-# --------------------------------------------------------------------------- #
-# Tab 2 — risk screening
-# --------------------------------------------------------------------------- #
+# =========================================================================== #
+# Tab 2 — risk screening (prefilled from profile)
+# =========================================================================== #
 with tab2:
     st.subheader("Enter your health profile")
-    st.caption(
-        "This model estimates the **likelihood of a positive diagnosis** from your "
-        "symptoms and vitals — a quick personalized screening."
-    )
+    prof = get_profile(user["username"])
+    if prof:
+        st.caption("✅ Prefilled from your saved profile — adjust as needed.")
+    else:
+        st.caption("Tip: save your profile in the sidebar to prefill this form.")
 
+    level_map = {"Low": 0, "Normal": 1, "High": 2}
     col1, col2, col3 = st.columns(3)
     with col1:
-        age = st.number_input("Age", min_value=1, max_value=120, value=35)
-        gender = st.radio("Gender", ["Female", "Male"], horizontal=True)
+        age = st.number_input("Age", 1, 120, int(prof.get("age", 35)), key="risk_age")
+        gender = st.radio(
+            "Gender", ["Female", "Male"],
+            index=1 if prof.get("gender") == "Male" else 0, horizontal=True, key="risk_gender",
+        )
     with col2:
         fever = st.checkbox("Fever")
         cough = st.checkbox("Cough")
         fatigue = st.checkbox("Fatigue")
         breathing = st.checkbox("Difficulty breathing")
     with col3:
-        bp = st.select_slider("Blood pressure", ["Low", "Normal", "High"], value="Normal")
-        chol = st.select_slider("Cholesterol level", ["Low", "Normal", "High"], value="Normal")
+        bp = st.select_slider("Blood pressure", ["Low", "Normal", "High"], value=prof.get("bp", "Normal"), key="risk_bp")
+        chol = st.select_slider("Cholesterol level", ["Low", "Normal", "High"], value=prof.get("chol", "Normal"), key="risk_chol")
 
-    level_map = {"Low": 0, "Normal": 1, "High": 2}
-    if st.button("📈 Assess Risk", type="primary", width='stretch'):
+    if st.button("📈 Assess Risk", type="primary", width="stretch"):
         profile = {
-            "fever": int(fever),
-            "cough": int(cough),
-            "fatigue": int(fatigue),
-            "difficulty_breathing": int(breathing),
-            "age": age,
+            "fever": int(fever), "cough": int(cough), "fatigue": int(fatigue),
+            "difficulty_breathing": int(breathing), "age": age,
             "gender": 1 if gender == "Male" else 0,
-            "blood_pressure": level_map[bp],
-            "cholesterol_level": level_map[chol],
+            "blood_pressure": level_map[bp], "cholesterol_level": level_map[chol],
         }
         res = predict_risk(profile)
         prob = res["probability"] * 100
+        log_event(user["username"], "risk_check", {"outcome": res["outcome"], "probability": res["probability"]})
 
         gauge = go.Figure(
             go.Indicator(
-                mode="gauge+number",
-                value=prob,
-                number={"suffix": "%"},
+                mode="gauge+number", value=prob, number={"suffix": "%"},
                 title={"text": "Likelihood of positive diagnosis"},
                 gauge={
                     "axis": {"range": [0, 100]},
-                    "bar": {"color": "#2563eb"},
+                    "bar": {"color": ACCENT},
                     "steps": [
                         {"range": [0, 40], "color": "#dcfce7"},
                         {"range": [40, 70], "color": "#fef9c3"},
@@ -305,7 +445,7 @@ with tab2:
             )
         )
         gauge.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=10))
-        st.plotly_chart(gauge, width='stretch')
+        st.plotly_chart(gauge, width="stretch")
 
         if res["outcome"] == "Positive":
             st.error(f"⚠️ Elevated risk — model predicts a **Positive** outcome ({prob:.1f}%). Consider consulting a doctor.")
@@ -318,9 +458,9 @@ with tab2:
             unsafe_allow_html=True,
         )
 
-# --------------------------------------------------------------------------- #
+# =========================================================================== #
 # Tab 3 — medicine sentiment explorer (NLP)
-# --------------------------------------------------------------------------- #
+# =========================================================================== #
 with tab3:
     st.subheader("Explore real patient sentiment about medicines")
     st.caption(
@@ -342,52 +482,41 @@ with tab3:
             with e1:
                 show = rows.rename(
                     columns={
-                        "drugName": "Medicine",
-                        "n_reviews": "Reviews",
-                        "avg_rating": "Avg rating (/10)",
-                        "sentiment_score": "Sentiment",
+                        "drugName": "Medicine", "n_reviews": "Reviews",
+                        "avg_rating": "Avg rating (/10)", "sentiment_score": "Sentiment",
                         "total_useful": "Helpful votes",
                     }
                 )[["Medicine", "Reviews", "Avg rating (/10)", "Sentiment", "Helpful votes"]]
-                st.dataframe(show, width='stretch', hide_index=True, height=430)
+                st.dataframe(show, width="stretch", hide_index=True, height=430)
             with e2:
                 efig = go.Figure(
                     go.Scatter(
-                        x=rows["n_reviews"],
-                        y=rows["sentiment_score"] * 100,
-                        mode="markers+text",
-                        text=rows["drugName"],
-                        textposition="top center",
-                        textfont=dict(size=9),
+                        x=rows["n_reviews"], y=rows["sentiment_score"] * 100,
+                        mode="markers+text", text=rows["drugName"],
+                        textposition="top center", textfont=dict(size=9),
                         marker=dict(
                             size=rows["avg_rating"] * 2.2,
                             color=rows["sentiment_score"] * 100,
-                            colorscale="RdYlGn",
-                            cmin=0,
-                            cmax=100,
-                            showscale=True,
-                            colorbar=dict(title="Sent. %"),
+                            colorscale="RdYlGn", cmin=0, cmax=100,
+                            showscale=True, colorbar=dict(title="Sent. %"),
                         ),
                     )
                 )
                 efig.update_layout(
                     title=f"Drugs for {cond}: sentiment vs. review volume",
-                    xaxis_title="Number of reviews",
-                    yaxis_title="Positive sentiment (%)",
-                    height=430,
-                    margin=dict(l=10, r=10, t=40, b=10),
+                    xaxis_title="Number of reviews", yaxis_title="Positive sentiment (%)",
+                    height=430, margin=dict(l=10, r=10, t=40, b=10),
                 )
-                st.plotly_chart(efig, width='stretch')
+                st.plotly_chart(efig, width="stretch")
 
     st.divider()
     st.subheader("🧪 Try the sentiment model live")
-    st.caption("Type any medicine review and see how the NLP model scores it.")
     demo_text = st.text_area(
         "Review text:",
         placeholder="e.g. This medication worked wonders for my headaches, no side effects at all!",
         height=100,
     )
-    if st.button("Analyze sentiment", width='stretch'):
+    if st.button("Analyze sentiment", width="stretch"):
         if not demo_text.strip():
             st.warning("Please enter a review first.")
         else:
@@ -404,3 +533,104 @@ with tab3:
             else:
                 st.error(f"😞 **Negative** — {proba*100:.1f}% positive sentiment")
             st.progress(proba)
+
+# =========================================================================== #
+# Tab 4 — analytics dashboard
+# =========================================================================== #
+with tab4:
+    st.subheader("📈 Analytics & Reporting")
+
+    events = get_events()
+    my_events = [e for e in events if e["user"] == user["username"]]
+    predictions = [e for e in events if e["type"] == "disease_prediction"]
+
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric("Total predictions (all users)", len(predictions))
+    k2.metric("My activity events", len(my_events))
+    insights = _dataset_insights()
+    k3.metric("Diseases covered", insights["n_diseases"])
+    k4.metric("Symptoms tracked", insights["n_symptoms"])
+
+    st.divider()
+    d1, d2 = st.columns(2)
+
+    with d1:
+        st.markdown("##### 🔥 Most predicted diseases (popularity ranking)")
+        if predictions:
+            pop = pd.Series([p["detail"]["disease"] for p in predictions]).value_counts().head(10)
+            st.plotly_chart(
+                _bar(pop.values[::-1], pop.index[::-1], "", xaxis="Predictions"),
+                width="stretch",
+            )
+        else:
+            st.info("No predictions yet — run one in the Disease Prediction tab.")
+
+        st.markdown("##### 🧪 Model performance comparison")
+        m = _metrics()
+        names, accs = [], []
+        if "disease_metrics.json" in m:
+            names.append("Disease (41-class)"); accs.append(m["disease_metrics.json"]["test_accuracy"] * 100)
+        if "risk_metrics.json" in m:
+            names.append("Risk screening"); accs.append(m["risk_metrics.json"]["test_accuracy"] * 100)
+        if "sentiment_metrics.json" in m:
+            names.append("Review sentiment (NLP)"); accs.append(m["sentiment_metrics.json"]["test_accuracy"] * 100)
+        st.plotly_chart(
+            _bar(accs, names, "", color="#10b981", xaxis="Test accuracy (%)"),
+            width="stretch",
+        )
+
+    with d2:
+        st.markdown("##### 🩹 Most common symptoms in the training data")
+        ts = insights["top_symptoms"]
+        st.plotly_chart(
+            _bar(ts.values[::-1], [humanize(s) for s in ts.index][::-1], "", color="#0ea5e9", xaxis="Occurrences", height=430),
+            width="stretch",
+        )
+
+    st.divider()
+    if user["role"] == "Admin":
+        st.markdown("##### 👥 User activity (Admin)")
+        a1, a2 = st.columns(2)
+        with a1:
+            udf = pd.DataFrame(list_users())
+            st.dataframe(udf, width="stretch", hide_index=True)
+        with a2:
+            if events:
+                edf = pd.DataFrame(
+                    [
+                        {
+                            "time": e["ts"][:19].replace("T", " "),
+                            "user": e["user"],
+                            "event": e["type"],
+                            "detail": e["detail"].get("disease") or e["detail"].get("outcome") or "",
+                        }
+                        for e in events[:50]
+                    ]
+                )
+                st.dataframe(edf, width="stretch", hide_index=True)
+            else:
+                st.info("No activity yet.")
+    else:
+        st.markdown("##### 🕘 My prediction history")
+        mine = [e for e in my_events if e["type"] in ("disease_prediction", "risk_check")]
+        if mine:
+            hdf = pd.DataFrame(
+                [
+                    {
+                        "time": e["ts"][:19].replace("T", " "),
+                        "event": e["type"],
+                        "result": e["detail"].get("disease") or e["detail"].get("outcome") or "",
+                        "confidence": e["detail"].get("confidence") or e["detail"].get("probability") or "",
+                    }
+                    for e in mine[:50]
+                ]
+            )
+            st.dataframe(hdf, width="stretch", hide_index=True)
+        else:
+            st.info("No history yet — make a prediction!")
+
+st.markdown(
+    '<div class="footer">Built with scikit-learn, XGBoost & Streamlit · '
+    "Internship project @ Zidio Development · Educational use only</div>",
+    unsafe_allow_html=True,
+)

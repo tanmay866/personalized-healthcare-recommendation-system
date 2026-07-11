@@ -1,0 +1,904 @@
+{
+  "(vertigo) Paroymsal  Positional Vertigo": [
+    {
+      "disease": "Malaria",
+      "similarity": 0.4366
+    },
+    {
+      "disease": "Paralysis (brain hemorrhage)",
+      "similarity": 0.406
+    },
+    {
+      "disease": "Hypertension",
+      "similarity": 0.3702
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.3671
+    },
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.3504
+    }
+  ],
+  "AIDS": [
+    {
+      "disease": "Bronchial Asthma",
+      "similarity": 0.2162
+    },
+    {
+      "disease": "Impetigo",
+      "similarity": 0.2125
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.184
+    },
+    {
+      "disease": "Malaria",
+      "similarity": 0.1839
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.1628
+    }
+  ],
+  "Acne": [
+    {
+      "disease": "Fungal infection",
+      "similarity": 0.2602
+    },
+    {
+      "disease": "Impetigo",
+      "similarity": 0.2375
+    },
+    {
+      "disease": "Drug Reaction",
+      "similarity": 0.2301
+    },
+    {
+      "disease": "Psoriasis",
+      "similarity": 0.2125
+    },
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.1554
+    }
+  ],
+  "Alcoholic hepatitis": [
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.4286
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.4009
+    },
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.378
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.337
+    },
+    {
+      "disease": "Peptic ulcer diseae",
+      "similarity": 0.314
+    }
+  ],
+  "Allergy": [
+    {
+      "disease": "Common Cold",
+      "similarity": 0.2359
+    },
+    {
+      "disease": "Malaria",
+      "similarity": 0.1767
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.1564
+    },
+    {
+      "disease": "Pneumonia",
+      "similarity": 0.1486
+    },
+    {
+      "disease": "Dengue",
+      "similarity": 0.1311
+    }
+  ],
+  "Arthritis": [
+    {
+      "disease": "Osteoarthristis",
+      "similarity": 0.3651
+    },
+    {
+      "disease": "Migraine",
+      "similarity": 0.1491
+    },
+    {
+      "disease": "Hyperthyroidism",
+      "similarity": 0.1399
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.0
+    },
+    {
+      "disease": "Common Cold",
+      "similarity": 0.0
+    }
+  ],
+  "Bronchial Asthma": [
+    {
+      "disease": "Pneumonia",
+      "similarity": 0.4808
+    },
+    {
+      "disease": "Tuberculosis",
+      "similarity": 0.394
+    },
+    {
+      "disease": "Hepatitis C",
+      "similarity": 0.3331
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.286
+    },
+    {
+      "disease": "Common Cold",
+      "similarity": 0.2836
+    }
+  ],
+  "Cervical spondylosis": [
+    {
+      "disease": "Hypertension",
+      "similarity": 0.4105
+    },
+    {
+      "disease": "(vertigo) Paroymsal  Positional Vertigo",
+      "similarity": 0.188
+    },
+    {
+      "disease": "Osteoarthristis",
+      "similarity": 0.1864
+    },
+    {
+      "disease": "Hypothyroidism",
+      "similarity": 0.1241
+    },
+    {
+      "disease": "Dengue",
+      "similarity": 0.1194
+    }
+  ],
+  "Chicken pox": [
+    {
+      "disease": "Dengue",
+      "similarity": 0.5646
+    },
+    {
+      "disease": "Tuberculosis",
+      "similarity": 0.4556
+    },
+    {
+      "disease": "Hepatitis B",
+      "similarity": 0.4326
+    },
+    {
+      "disease": "Common Cold",
+      "similarity": 0.3559
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.3167
+    }
+  ],
+  "Chronic cholestasis": [
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.7559
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.6798
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.6325
+    },
+    {
+      "disease": "Hepatitis C",
+      "similarity": 0.6144
+    },
+    {
+      "disease": "Hepatitis B",
+      "similarity": 0.5416
+    }
+  ],
+  "Common Cold": [
+    {
+      "disease": "Pneumonia",
+      "similarity": 0.5019
+    },
+    {
+      "disease": "Tuberculosis",
+      "similarity": 0.478
+    },
+    {
+      "disease": "Dengue",
+      "similarity": 0.3777
+    },
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.3559
+    },
+    {
+      "disease": "Malaria",
+      "similarity": 0.3425
+    }
+  ],
+  "Dengue": [
+    {
+      "disease": "Malaria",
+      "similarity": 0.5708
+    },
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.5646
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.4881
+    },
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.4463
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.4391
+    }
+  ],
+  "Diabetes": [
+    {
+      "disease": "Hyperthyroidism",
+      "similarity": 0.3719
+    },
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.2709
+    },
+    {
+      "disease": "Varicose veins",
+      "similarity": 0.2383
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.2212
+    },
+    {
+      "disease": "Migraine",
+      "similarity": 0.2086
+    }
+  ],
+  "Dimorphic hemmorhoids(piles)": [
+    {
+      "disease": "Typhoid",
+      "similarity": 0.1329
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.0
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.0
+    },
+    {
+      "disease": "Gastroenteritis",
+      "similarity": 0.0
+    },
+    {
+      "disease": "GERD",
+      "similarity": 0.0
+    }
+  ],
+  "Drug Reaction": [
+    {
+      "disease": "Fungal infection",
+      "similarity": 0.4545
+    },
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.2714
+    },
+    {
+      "disease": "Acne",
+      "similarity": 0.2301
+    },
+    {
+      "disease": "Urinary tract infection",
+      "similarity": 0.2178
+    },
+    {
+      "disease": "Impetigo",
+      "similarity": 0.2018
+    }
+  ],
+  "Fungal infection": [
+    {
+      "disease": "Drug Reaction",
+      "similarity": 0.4545
+    },
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.2986
+    },
+    {
+      "disease": "Acne",
+      "similarity": 0.2602
+    },
+    {
+      "disease": "Impetigo",
+      "similarity": 0.2282
+    },
+    {
+      "disease": "Psoriasis",
+      "similarity": 0.2041
+    }
+  ],
+  "GERD": [
+    {
+      "disease": "Heart attack",
+      "similarity": 0.4139
+    },
+    {
+      "disease": "Tuberculosis",
+      "similarity": 0.3062
+    },
+    {
+      "disease": "Pneumonia",
+      "similarity": 0.2557
+    },
+    {
+      "disease": "Common Cold",
+      "similarity": 0.2029
+    },
+    {
+      "disease": "Paralysis (brain hemorrhage)",
+      "similarity": 0.1958
+    }
+  ],
+  "Gastroenteritis": [
+    {
+      "disease": "Malaria",
+      "similarity": 0.3485
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.3012
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.3012
+    },
+    {
+      "disease": "Heart attack",
+      "similarity": 0.2431
+    },
+    {
+      "disease": "Paralysis (brain hemorrhage)",
+      "similarity": 0.2431
+    }
+  ],
+  "Heart attack": [
+    {
+      "disease": "Tuberculosis",
+      "similarity": 0.4936
+    },
+    {
+      "disease": "Pneumonia",
+      "similarity": 0.4558
+    },
+    {
+      "disease": "GERD",
+      "similarity": 0.4139
+    },
+    {
+      "disease": "Malaria",
+      "similarity": 0.3485
+    },
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.2796
+    }
+  ],
+  "Hepatitis B": [
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.5722
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.5416
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.5014
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.4789
+    },
+    {
+      "disease": "Hepatitis C",
+      "similarity": 0.4668
+    }
+  ],
+  "Hepatitis C": [
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.6791
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.6144
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.5651
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.4891
+    },
+    {
+      "disease": "Hepatitis B",
+      "similarity": 0.4668
+    }
+  ],
+  "Hepatitis D": [
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.8296
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.7977
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.7559
+    },
+    {
+      "disease": "Hepatitis C",
+      "similarity": 0.6791
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.5893
+    }
+  ],
+  "Hepatitis E": [
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.8296
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.6633
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.6325
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.5816
+    },
+    {
+      "disease": "Hepatitis C",
+      "similarity": 0.5651
+    }
+  ],
+  "Hypertension": [
+    {
+      "disease": "Cervical spondylosis",
+      "similarity": 0.4105
+    },
+    {
+      "disease": "(vertigo) Paroymsal  Positional Vertigo",
+      "similarity": 0.3702
+    },
+    {
+      "disease": "Heart attack",
+      "similarity": 0.2276
+    },
+    {
+      "disease": "Paralysis (brain hemorrhage)",
+      "similarity": 0.2156
+    },
+    {
+      "disease": "Common Cold",
+      "similarity": 0.2118
+    }
+  ],
+  "Hyperthyroidism": [
+    {
+      "disease": "Diabetes",
+      "similarity": 0.3719
+    },
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.3507
+    },
+    {
+      "disease": "Hypothyroidism",
+      "similarity": 0.3362
+    },
+    {
+      "disease": "Pneumonia",
+      "similarity": 0.2696
+    },
+    {
+      "disease": "Tuberculosis",
+      "similarity": 0.2171
+    }
+  ],
+  "Hypoglycemia": [
+    {
+      "disease": "Malaria",
+      "similarity": 0.401
+    },
+    {
+      "disease": "Migraine",
+      "similarity": 0.3881
+    },
+    {
+      "disease": "Hyperthyroidism",
+      "similarity": 0.3507
+    },
+    {
+      "disease": "(vertigo) Paroymsal  Positional Vertigo",
+      "similarity": 0.3504
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.3416
+    }
+  ],
+  "Hypothyroidism": [
+    {
+      "disease": "Hyperthyroidism",
+      "similarity": 0.3362
+    },
+    {
+      "disease": "Migraine",
+      "similarity": 0.1907
+    },
+    {
+      "disease": "Diabetes",
+      "similarity": 0.1655
+    },
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.1584
+    },
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.158
+    }
+  ],
+  "Impetigo": [
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.2582
+    },
+    {
+      "disease": "Acne",
+      "similarity": 0.2375
+    },
+    {
+      "disease": "Fungal infection",
+      "similarity": 0.2282
+    },
+    {
+      "disease": "Dengue",
+      "similarity": 0.2268
+    },
+    {
+      "disease": "AIDS",
+      "similarity": 0.2125
+    }
+  ],
+  "Jaundice": [
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.5893
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.5816
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.5345
+    },
+    {
+      "disease": "Hepatitis B",
+      "similarity": 0.5014
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.4313
+    }
+  ],
+  "Malaria": [
+    {
+      "disease": "Typhoid",
+      "similarity": 0.6357
+    },
+    {
+      "disease": "Dengue",
+      "similarity": 0.5708
+    },
+    {
+      "disease": "(vertigo) Paroymsal  Positional Vertigo",
+      "similarity": 0.4366
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.4259
+    },
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.401
+    }
+  ],
+  "Migraine": [
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.3881
+    },
+    {
+      "disease": "Diabetes",
+      "similarity": 0.2086
+    },
+    {
+      "disease": "Hyperthyroidism",
+      "similarity": 0.2033
+    },
+    {
+      "disease": "Hypothyroidism",
+      "similarity": 0.1907
+    },
+    {
+      "disease": "Paralysis (brain hemorrhage)",
+      "similarity": 0.1643
+    }
+  ],
+  "Osteoarthristis": [
+    {
+      "disease": "Arthritis",
+      "similarity": 0.3651
+    },
+    {
+      "disease": "Cervical spondylosis",
+      "similarity": 0.1864
+    },
+    {
+      "disease": "Psoriasis",
+      "similarity": 0.1667
+    },
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.1361
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.1213
+    }
+  ],
+  "Paralysis (brain hemorrhage)": [
+    {
+      "disease": "(vertigo) Paroymsal  Positional Vertigo",
+      "similarity": 0.406
+    },
+    {
+      "disease": "Malaria",
+      "similarity": 0.3485
+    },
+    {
+      "disease": "Typhoid",
+      "similarity": 0.293
+    },
+    {
+      "disease": "Hypoglycemia",
+      "similarity": 0.2796
+    },
+    {
+      "disease": "Dengue",
+      "similarity": 0.2654
+    }
+  ],
+  "Peptic ulcer diseae": [
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.4628
+    },
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.4081
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.3638
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.3443
+    },
+    {
+      "disease": "Alcoholic hepatitis",
+      "similarity": 0.314
+    }
+  ],
+  "Pneumonia": [
+    {
+      "disease": "Tuberculosis",
+      "similarity": 0.6667
+    },
+    {
+      "disease": "Common Cold",
+      "similarity": 0.5019
+    },
+    {
+      "disease": "Bronchial Asthma",
+      "similarity": 0.4808
+    },
+    {
+      "disease": "Heart attack",
+      "similarity": 0.4558
+    },
+    {
+      "disease": "Malaria",
+      "similarity": 0.3151
+    }
+  ],
+  "Psoriasis": [
+    {
+      "disease": "Dengue",
+      "similarity": 0.2141
+    },
+    {
+      "disease": "Acne",
+      "similarity": 0.2125
+    },
+    {
+      "disease": "Fungal infection",
+      "similarity": 0.2041
+    },
+    {
+      "disease": "Impetigo",
+      "similarity": 0.1863
+    },
+    {
+      "disease": "Drug Reaction",
+      "similarity": 0.1805
+    }
+  ],
+  "Tuberculosis": [
+    {
+      "disease": "Pneumonia",
+      "similarity": 0.6667
+    },
+    {
+      "disease": "Heart attack",
+      "similarity": 0.4936
+    },
+    {
+      "disease": "Common Cold",
+      "similarity": 0.478
+    },
+    {
+      "disease": "Chicken pox",
+      "similarity": 0.4556
+    },
+    {
+      "disease": "Bronchial Asthma",
+      "similarity": 0.394
+    }
+  ],
+  "Typhoid": [
+    {
+      "disease": "Malaria",
+      "similarity": 0.6357
+    },
+    {
+      "disease": "Dengue",
+      "similarity": 0.4881
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.4313
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.4165
+    },
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.4014
+    }
+  ],
+  "Urinary tract infection": [
+    {
+      "disease": "Drug Reaction",
+      "similarity": 0.2178
+    },
+    {
+      "disease": "hepatitis A",
+      "similarity": 0.0
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.0
+    },
+    {
+      "disease": "Gastroenteritis",
+      "similarity": 0.0
+    },
+    {
+      "disease": "GERD",
+      "similarity": 0.0
+    }
+  ],
+  "Varicose veins": [
+    {
+      "disease": "Diabetes",
+      "similarity": 0.2383
+    },
+    {
+      "disease": "Hepatitis C",
+      "similarity": 0.1568
+    },
+    {
+      "disease": "Bronchial Asthma",
+      "similarity": 0.1498
+    },
+    {
+      "disease": "Jaundice",
+      "similarity": 0.1346
+    },
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.1269
+    }
+  ],
+  "hepatitis A": [
+    {
+      "disease": "Hepatitis D",
+      "similarity": 0.7977
+    },
+    {
+      "disease": "Chronic cholestasis",
+      "similarity": 0.6798
+    },
+    {
+      "disease": "Hepatitis E",
+      "similarity": 0.6633
+    },
+    {
+      "disease": "Hepatitis C",
+      "similarity": 0.4891
+    },
+    {
+      "disease": "Hepatitis B",
+      "similarity": 0.4305
+    }
+  ]
+}

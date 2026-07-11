@@ -10,11 +10,14 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 
 | # | Feature | What it does |
 |---|---------|--------------|
-| 1 | **Disease Prediction** | Enter your symptoms → ML model predicts the most likely disease (with confidence & top-3 alternatives). |
-| 2 | **Care Recommendations** | For the predicted disease, get medicines, precautions, diet, workout/lifestyle tips, and which specialist to consult. |
-| 3 | **Health Risk Screening** | Enter symptoms + vitals (age, gender, blood pressure, cholesterol) → model estimates the likelihood of a positive diagnosis. |
-| 4 | **Medicine Sentiment (NLP)** | Real medicines ranked by patient satisfaction, from an NLP sentiment model trained on 200K+ drugs.com reviews — plus a live review analyzer. |
-| 5 | **Interactive Dashboard** | A clean Streamlit web app with charts (confidence bars, a risk gauge, sentiment plots) and model performance metrics. |
+| 1 | **User Management** | Signup/login with salted-hash passwords, Admin/User roles, and per-user health profiles that prefill the risk form. |
+| 2 | **Disease Prediction** | Enter your symptoms → ML model predicts the most likely disease (with confidence & top-3 alternatives). |
+| 3 | **Care Recommendations** | For the predicted disease: medicines, precautions, diet, workout/lifestyle tips, and which specialist to consult. |
+| 4 | **Content-Based Filtering** | "Related diseases" via cosine similarity between disease symptom profiles. |
+| 5 | **Hybrid Medicine Ranking** | Real medicines ranked by a hybrid score: 60% NLP review sentiment (crowd signal) + 40% star rating (content signal), from 200K+ drugs.com reviews. |
+| 6 | **Health Risk Screening** | Symptoms + vitals (age, gender, blood pressure, cholesterol) → likelihood of a positive diagnosis. |
+| 7 | **Sentiment Explorer (NLP)** | Per-condition drug sentiment rankings + a live review analyzer powered by the trained NLP model. |
+| 8 | **Analytics Dashboard** | Usage trends, disease popularity rankings, model performance comparison, dataset insights; admins see all user activity. |
 
 ---
 
@@ -25,16 +28,17 @@ This project deliberately uses **two complementary models**, each backed by a su
 ### Model 1 — Symptom → Disease Predictor
 - **Dataset:** 4,920 records · 132 symptoms · 41 diseases (perfectly balanced).
 - **Approach:** symptoms encoded as a 132-dim binary vector → multi-class classification.
-- **Models compared:** Random Forest, SVM, Naive Bayes, XGBoost (5-fold stratified CV).
+- **Models compared:** Random Forest, SVM, Naive Bayes, XGBoost, and a **neural network** (MLP with 128→64 hidden layers) — 5-fold stratified CV.
 - **Result:** **100% test accuracy** (Random Forest selected).
+- Also produces the **content-based filtering** artifact: cosine similarity between per-disease mean symptom vectors → "related diseases".
   - *Note:* this dataset is cleanly separable — every disease maps to a consistent symptom signature — so near-perfect accuracy is expected and is a property of the data, not overfitting. The engineering value here is the **complete, deployed end-to-end system**, not beating a hard benchmark.
 
 ### Model 2 — Personalized Risk / Outcome Screening
 - **Dataset:** patient-profile data (symptoms + age, gender, blood pressure, cholesterol).
 - **Target:** `outcome_variable` (Positive / Negative diagnosis).
   - We tested predicting `risk_level` (Low/Med/High) but it carries **no learnable signal** (models sit at the majority-class baseline), so we transparently pivoted to `outcome_variable`, which does.
-- **Models compared:** Random Forest, Gradient Boosting, Logistic Regression.
-- **Result:** **~77% test accuracy** vs a **52% majority-class baseline** (Random Forest) — a genuine, honest improvement.
+- **Models compared:** Random Forest, Gradient Boosting, Logistic Regression, MLP — plus a **GridSearchCV tuning pass** on the winner.
+- **Result:** **80% test accuracy** vs a **52% majority-class baseline** (tuned Random Forest) — a genuine, honest improvement.
 
 ### Model 3 — Drug-Review Sentiment (NLP)
 - **Dataset:** UCI Drug Review dataset (drugs.com) — **215K patient reviews**, 3,400+ drugs, 800+ conditions. *(Not committed — 112 MB; `src/train_sentiment.py` documents the download. A 5K sample ships in `data/processed/` for exploration.)*
@@ -64,10 +68,11 @@ personalized-healthcare-recommendation-system/
 │   └── 01_eda.ipynb            # exploratory data analysis
 ├── src/
 │   ├── preprocess.py           # data cleaning & feature engineering
-│   ├── train_disease.py        # trains + evaluates disease model
-│   ├── train_risk.py           # trains + evaluates risk model
-│   ├── train_sentiment.py      # trains NLP sentiment model on drug reviews
+│   ├── train_disease.py        # disease model + similarity artifact
+│   ├── train_risk.py           # risk model (+ GridSearch tuning)
+│   ├── train_sentiment.py      # NLP sentiment model on drug reviews
 │   ├── build_knowledge_base.py # authors the recommendation KB
+│   ├── auth.py                 # users, roles, profiles, activity log
 │   └── recommend.py            # inference layer used by the app
 ├── requirements.txt
 └── README.md
@@ -97,6 +102,8 @@ streamlit run app/app.py
 
 Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 
+**Login:** create your own account via *Sign up*, or use the demo admin: `admin` / `admin123` (admins additionally see all-user activity in the Analytics Dashboard).
+
 ---
 
 ## 🛠️ Tech stack
@@ -120,10 +127,10 @@ Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 
 ## 🔮 Future enhancements
 
-- REST API backend (Flask / FastAPI) with **JWT authentication** and role-based access.
-- Larger, real-world clinical datasets and model calibration.
-- Persistent user profiles and history tracking.
-- Deep-learning / graph-based recommendation modules.
+- REST API backend (Flask / FastAPI) with **JWT-token authentication** and a real database (the current auth is session-based with hashed passwords in JSON — right-sized for a demo).
+- Larger, real-world clinical datasets and probability calibration.
+- **Graph-based recommendations** (medical knowledge graphs) and **reinforcement learning** from user feedback.
+- TensorFlow/PyTorch deep-learning models (an sklearn MLP neural network is already included in the comparison).
 
 ---
 
