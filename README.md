@@ -13,11 +13,12 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 | 1 | **Disease Prediction** | Enter your symptoms → ML model predicts the most likely disease (with confidence & top-3 alternatives). |
 | 2 | **Care Recommendations** | For the predicted disease, get medicines, precautions, diet, workout/lifestyle tips, and which specialist to consult. |
 | 3 | **Health Risk Screening** | Enter symptoms + vitals (age, gender, blood pressure, cholesterol) → model estimates the likelihood of a positive diagnosis. |
-| 4 | **Interactive Dashboard** | A clean Streamlit web app with charts (confidence bars, a risk gauge) and model performance metrics. |
+| 4 | **Medicine Sentiment (NLP)** | Real medicines ranked by patient satisfaction, from an NLP sentiment model trained on 200K+ drugs.com reviews — plus a live review analyzer. |
+| 5 | **Interactive Dashboard** | A clean Streamlit web app with charts (confidence bars, a risk gauge, sentiment plots) and model performance metrics. |
 
 ---
 
-## 🧠 How it works — two models
+## 🧠 How it works — three models
 
 This project deliberately uses **two complementary models**, each backed by a suitable dataset:
 
@@ -35,6 +36,12 @@ This project deliberately uses **two complementary models**, each backed by a su
 - **Models compared:** Random Forest, Gradient Boosting, Logistic Regression.
 - **Result:** **~77% test accuracy** vs a **52% majority-class baseline** (Random Forest) — a genuine, honest improvement.
 
+### Model 3 — Drug-Review Sentiment (NLP)
+- **Dataset:** UCI Drug Review dataset (drugs.com) — **215K patient reviews**, 3,400+ drugs, 800+ conditions. *(Not committed — 112 MB; `src/train_sentiment.py` documents the download. A 5K sample ships in `data/processed/` for exploration.)*
+- **Approach:** ratings → binary sentiment labels (≥7 positive, ≤4 negative); **TF-IDF (uni+bi-grams, 50K features) → Logistic Regression**.
+- **Result:** **90% test accuracy, 0.93 F1** on ~49K held-out reviews.
+- **Usage:** every review is scored by the model, then aggregated per (drug, condition) into `data/processed/drug_sentiment.csv`. The app uses this to rank **real medicines by patient satisfaction** for 26 of the 41 predictable diseases, and offers a sentiment explorer + live review analyzer.
+
 > **Honesty note:** rather than force one weak dataset to do everything, each model is matched to a dataset that can actually support it. Recognizing and documenting this trade-off is part of the project.
 
 ---
@@ -44,7 +51,7 @@ This project deliberately uses **two complementary models**, each backed by a su
 ```
 personalized-healthcare-recommendation-system/
 ├── app/
-│   └── app.py                  # Streamlit web app (2 tabs)
+│   └── app.py                  # Streamlit web app (3 tabs)
 ├── data/
 │   ├── raw/                    # source datasets
 │   │   ├── disease_symptoms.csv
@@ -59,6 +66,7 @@ personalized-healthcare-recommendation-system/
 │   ├── preprocess.py           # data cleaning & feature engineering
 │   ├── train_disease.py        # trains + evaluates disease model
 │   ├── train_risk.py           # trains + evaluates risk model
+│   ├── train_sentiment.py      # trains NLP sentiment model on drug reviews
 │   ├── build_knowledge_base.py # authors the recommendation KB
 │   └── recommend.py            # inference layer used by the app
 ├── requirements.txt
@@ -94,7 +102,7 @@ Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 ## 🛠️ Tech stack
 
 - **Python** · pandas · NumPy
-- **scikit-learn** · **XGBoost** (modeling)
+- **scikit-learn** · **XGBoost** (modeling) · **TF-IDF NLP** (sentiment)
 - **Streamlit** (web app) · **Plotly** (charts)
 - **joblib** (model persistence)
 
@@ -106,13 +114,13 @@ Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 |-------|------|----------------|----------|----------|
 | Disease predictor | 41-class symptom → disease | Random Forest | **100%** | 2.4% (random) |
 | Risk screener | Positive/Negative outcome | Random Forest | **~77%** | 52% (majority) |
+| Review sentiment (NLP) | Positive/Negative review | TF-IDF + Logistic Regression | **90%** (F1 0.93) | 72% (majority) |
 
 ---
 
 ## 🔮 Future enhancements
 
 - REST API backend (Flask / FastAPI) with **JWT authentication** and role-based access.
-- **NLP sentiment analysis** on real drug-review data to rank recommended medicines.
 - Larger, real-world clinical datasets and model calibration.
 - Persistent user profiles and history tracking.
 - Deep-learning / graph-based recommendation modules.

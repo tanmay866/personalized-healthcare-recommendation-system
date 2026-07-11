@@ -24,11 +24,15 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from recommend import (  # noqa: E402
+    condition_sentiment,
+    get_drug_sentiment,
     get_recommendation,
     humanize,
+    list_sentiment_conditions,
     list_symptoms,
     predict_disease,
     predict_risk,
+    sentiment_conditions_for,
 )
 
 MODELS = ROOT / "models"
@@ -71,7 +75,7 @@ st.markdown(
 @st.cache_data
 def _metrics() -> dict:
     out = {}
-    for name in ["disease_metrics.json", "risk_metrics.json"]:
+    for name in ["disease_metrics.json", "risk_metrics.json", "sentiment_metrics.json"]:
         p = MODELS / name
         if p.exists():
             out[name] = json.loads(p.read_text())
@@ -111,6 +115,10 @@ with st.sidebar:
         rm = m["risk_metrics.json"]
         st.metric("Risk model accuracy", f"{rm['test_accuracy']*100:.0f}%")
         st.caption(f"{rm['best_model']} · baseline {rm['majority_baseline']*100:.0f}%")
+    if "sentiment_metrics.json" in m:
+        sm = m["sentiment_metrics.json"]
+        st.metric("Sentiment model accuracy", f"{sm['test_accuracy']*100:.0f}%")
+        st.caption(f"NLP · {sm['train_reviews']:,} reviews · F1 {sm['test_f1']:.2f}")
     st.divider()
     st.markdown(
         '<div class="disclaimer">⚠️ <b>Disclaimer:</b> Educational demo only. '
@@ -123,7 +131,13 @@ with st.sidebar:
 st.markdown('<p class="main-title">Personalized Healthcare & Medicine Recommendation System</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Machine-learning powered disease prediction, care recommendations, and risk screening.</p>', unsafe_allow_html=True)
 
-tab1, tab2 = st.tabs(["🔬  Disease Prediction & Recommendations", "📊  Health Risk Screening"])
+tab1, tab2, tab3 = st.tabs(
+    [
+        "🔬  Disease Prediction & Recommendations",
+        "📊  Health Risk Screening",
+        "💬  Medicine Sentiment Explorer",
+    ]
+)
 
 # --------------------------------------------------------------------------- #
 # Tab 1 — disease prediction
@@ -140,7 +154,7 @@ with tab1:
     )
     chosen = [labels[l] for l in chosen_labels]
 
-    if st.button("🔍 Predict Disease", type="primary", use_container_width=True):
+    if st.button("🔍 Predict Disease", type="primary", width='stretch'):
         if len(chosen) == 0:
             st.warning("Please select at least one symptom.")
         else:
@@ -175,7 +189,7 @@ with tab1:
                     margin=dict(l=10, r=10, t=40, b=10),
                     xaxis_title="Probability (%)",
                 )
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
             st.divider()
             st.subheader("💡 Personalized Recommendations")
@@ -187,6 +201,46 @@ with tab1:
                 _rec_card("🏃 Workout / Lifestyle", rec.get("workout"), is_list=False)
             with rc2:
                 _rec_card("🛡️ Precautions", rec.get("precautions"))
+
+            # --- NLP feature: real medicines ranked by patient-review sentiment
+            sent = get_drug_sentiment(disease, top_n=8)
+            if sent is not None:
+                st.divider()
+                st.subheader("💬 Top-Rated Real Medicines (by patient sentiment)")
+                st.caption(
+                    f"Ranked by an NLP sentiment model trained on 200K+ real patient "
+                    f"reviews (drugs.com), for: {', '.join(sentiment_conditions_for(disease))}."
+                )
+                sc1, sc2 = st.columns([1, 1])
+                with sc1:
+                    show = sent.rename(
+                        columns={
+                            "drugName": "Medicine",
+                            "condition": "Condition",
+                            "n_reviews": "Reviews",
+                            "avg_rating": "Avg rating (/10)",
+                            "sentiment_score": "Sentiment",
+                        }
+                    )[["Medicine", "Condition", "Reviews", "Avg rating (/10)", "Sentiment"]]
+                    st.dataframe(show, width='stretch', hide_index=True)
+                with sc2:
+                    sfig = go.Figure(
+                        go.Bar(
+                            x=(sent["sentiment_score"] * 100)[::-1],
+                            y=sent["drugName"][::-1],
+                            orientation="h",
+                            marker_color="#10b981",
+                            text=[f"{v*100:.0f}%" for v in sent["sentiment_score"]][::-1],
+                            textposition="auto",
+                        )
+                    )
+                    sfig.update_layout(
+                        title="Patient sentiment (% positive)",
+                        height=320,
+                        margin=dict(l=10, r=10, t=40, b=10),
+                        xaxis_title="Positive sentiment (%)",
+                    )
+                    st.plotly_chart(sfig, width='stretch')
 
             st.markdown(
                 '<div class="disclaimer">⚠️ These recommendations are general and '
@@ -219,7 +273,7 @@ with tab2:
         chol = st.select_slider("Cholesterol level", ["Low", "Normal", "High"], value="Normal")
 
     level_map = {"Low": 0, "Normal": 1, "High": 2}
-    if st.button("📈 Assess Risk", type="primary", use_container_width=True):
+    if st.button("📈 Assess Risk", type="primary", width='stretch'):
         profile = {
             "fever": int(fever),
             "cough": int(cough),
@@ -251,7 +305,7 @@ with tab2:
             )
         )
         gauge.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=10))
-        st.plotly_chart(gauge, use_container_width=True)
+        st.plotly_chart(gauge, width='stretch')
 
         if res["outcome"] == "Positive":
             st.error(f"⚠️ Elevated risk — model predicts a **Positive** outcome ({prob:.1f}%). Consider consulting a doctor.")
@@ -263,3 +317,90 @@ with tab2:
             "small dataset, not a diagnosis. Consult a doctor for any health concern.</div>",
             unsafe_allow_html=True,
         )
+
+# --------------------------------------------------------------------------- #
+# Tab 3 — medicine sentiment explorer (NLP)
+# --------------------------------------------------------------------------- #
+with tab3:
+    st.subheader("Explore real patient sentiment about medicines")
+    st.caption(
+        "Powered by a TF-IDF + Logistic Regression sentiment model trained on "
+        "200K+ patient reviews from drugs.com (90% test accuracy)."
+    )
+
+    conditions = list_sentiment_conditions()
+    if not conditions:
+        st.info("Sentiment data not available. Run `python src/train_sentiment.py` first.")
+    else:
+        default_ix = conditions.index("Migraine") if "Migraine" in conditions else 0
+        cond = st.selectbox("Choose a condition:", conditions, index=default_ix)
+        rows = condition_sentiment(cond, top_n=15)
+        if rows is None or rows.empty:
+            st.warning("No drugs with enough reviews for this condition.")
+        else:
+            e1, e2 = st.columns([1, 1])
+            with e1:
+                show = rows.rename(
+                    columns={
+                        "drugName": "Medicine",
+                        "n_reviews": "Reviews",
+                        "avg_rating": "Avg rating (/10)",
+                        "sentiment_score": "Sentiment",
+                        "total_useful": "Helpful votes",
+                    }
+                )[["Medicine", "Reviews", "Avg rating (/10)", "Sentiment", "Helpful votes"]]
+                st.dataframe(show, width='stretch', hide_index=True, height=430)
+            with e2:
+                efig = go.Figure(
+                    go.Scatter(
+                        x=rows["n_reviews"],
+                        y=rows["sentiment_score"] * 100,
+                        mode="markers+text",
+                        text=rows["drugName"],
+                        textposition="top center",
+                        textfont=dict(size=9),
+                        marker=dict(
+                            size=rows["avg_rating"] * 2.2,
+                            color=rows["sentiment_score"] * 100,
+                            colorscale="RdYlGn",
+                            cmin=0,
+                            cmax=100,
+                            showscale=True,
+                            colorbar=dict(title="Sent. %"),
+                        ),
+                    )
+                )
+                efig.update_layout(
+                    title=f"Drugs for {cond}: sentiment vs. review volume",
+                    xaxis_title="Number of reviews",
+                    yaxis_title="Positive sentiment (%)",
+                    height=430,
+                    margin=dict(l=10, r=10, t=40, b=10),
+                )
+                st.plotly_chart(efig, width='stretch')
+
+    st.divider()
+    st.subheader("🧪 Try the sentiment model live")
+    st.caption("Type any medicine review and see how the NLP model scores it.")
+    demo_text = st.text_area(
+        "Review text:",
+        placeholder="e.g. This medication worked wonders for my headaches, no side effects at all!",
+        height=100,
+    )
+    if st.button("Analyze sentiment", width='stretch'):
+        if not demo_text.strip():
+            st.warning("Please enter a review first.")
+        else:
+            import joblib
+
+            @st.cache_resource
+            def _sentiment_model():
+                return joblib.load(MODELS / "sentiment_model.pkl")
+
+            model = _sentiment_model()
+            proba = float(model.predict_proba([demo_text])[0][1])
+            if proba >= 0.5:
+                st.success(f"😊 **Positive** — {proba*100:.1f}% positive sentiment")
+            else:
+                st.error(f"😞 **Negative** — {proba*100:.1f}% positive sentiment")
+            st.progress(proba)

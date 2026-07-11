@@ -1,0 +1,9 @@
+{
+  "model": "TF-IDF (1-2 grams, 50k feats) + LogisticRegression",
+  "train_reviews": 146941,
+  "test_reviews": 48937,
+  "test_accuracy": 0.9006,
+  "test_f1": 0.9326,
+  "labeling": "rating >=7 positive, <=4 negative, 5-6 dropped",
+  "n_drug_condition_pairs": 3533
+}

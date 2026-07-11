@@ -22,6 +22,41 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 MODELS = ROOT / "models"
 KB_PATH = ROOT / "data" / "processed" / "knowledge_base.json"
+SENTIMENT_PATH = ROOT / "data" / "processed" / "drug_sentiment.csv"
+
+# Maps our 41 model disease labels to drugs.com condition names present in the
+# sentiment table. Diseases without a reliable match are simply absent — the
+# sentiment feature degrades gracefully for them.
+DISEASE_TO_CONDITIONS: dict[str, list[str]] = {
+    "Acne": ["Acne"],
+    "AIDS": ["HIV Infection"],
+    "Allergy": ["Allergies", "Allergic Reactions", "Allergic Rhinitis"],
+    "Arthritis": ["Rheumatoid Arthritis", "Osteoarthritis"],
+    "Bronchial Asthma": ["Asthma", "Asthma, Maintenance", "Asthma, acute"],
+    "Common Cold": ["Cold Symptoms"],
+    "Diabetes": ["Diabetes, Type 2", "Diabetes, Type 1"],
+    "Dimorphic hemmorhoids(piles)": ["Hemorrhoids"],
+    "Fungal infection": [
+        "Tinea Corporis", "Tinea Cruris", "Tinea Pedis", "Cutaneous Candidiasis",
+    ],
+    "GERD": ["GERD"],
+    "Gastroenteritis": ["Gastroenteritis"],
+    "Heart attack": ["Heart Attack"],
+    "Hepatitis B": ["Hepatitis B"],
+    "Hepatitis C": ["Hepatitis C"],
+    "Hypertension": ["High Blood Pressure"],
+    "Hyperthyroidism": ["Hyperthyroidism"],
+    "Hypothyroidism": ["Underactive Thyroid", "Hypothyroidism, After Thyroid Removal"],
+    "Malaria": ["Malaria Prevention"],
+    "Migraine": ["Migraine", "Migraine Prevention"],
+    "Osteoarthristis": ["Osteoarthritis"],
+    "Peptic ulcer diseae": ["Duodenal Ulce", "GERD"],
+    "Pneumonia": ["Pneumonia"],
+    "Psoriasis": ["Psoriasis", "Plaque Psoriasis"],
+    "Tuberculosis": ["Tuberculosis", "Tuberculosis, Latent"],
+    "Urinary tract infection": ["Urinary Tract Infection"],
+    "Paralysis (brain hemorrhage)": ["Ischemic Stroke", "Ischemic Stroke, Prophylaxis"],
+}
 
 
 # --------------------------------------------------------------------------- #
@@ -132,6 +167,70 @@ def predict_risk(profile: dict) -> dict:
     }
 
 
+# --------------------------------------------------------------------------- #
+# Drug-review sentiment (NLP feature)
+# --------------------------------------------------------------------------- #
+@lru_cache(maxsize=1)
+def _sentiment_table() -> pd.DataFrame | None:
+    if not SENTIMENT_PATH.exists():
+        return None
+    return pd.read_csv(SENTIMENT_PATH)
+
+
+def get_drug_sentiment(disease: str, top_n: int = 8) -> pd.DataFrame | None:
+    """Top real-world drugs for a disease ranked by patient-review sentiment.
+
+    Returns a DataFrame (drugName, condition, n_reviews, avg_rating,
+    sentiment_score) or None when the disease has no mapped condition or the
+    sentiment table hasn't been built.
+    """
+    table = _sentiment_table()
+    conditions = DISEASE_TO_CONDITIONS.get(disease)
+    if table is None or not conditions:
+        return None
+
+    rows = table[table["condition"].isin(conditions)].copy()
+    if rows.empty:
+        return None
+
+    # A drug can appear under multiple mapped conditions — keep its best row,
+    # then rank by sentiment with review count as a stabilizer.
+    rows = rows.sort_values("sentiment_score", ascending=False)
+    rows = rows.drop_duplicates(subset="drugName", keep="first")
+    rows = rows.sort_values(
+        ["sentiment_score", "n_reviews"], ascending=[False, False]
+    ).head(top_n)
+    return rows.reset_index(drop=True)
+
+
+def sentiment_conditions_for(disease: str) -> list[str]:
+    """The drugs.com condition names a disease maps to (for display)."""
+    return DISEASE_TO_CONDITIONS.get(disease, [])
+
+
+def list_sentiment_conditions() -> list[str]:
+    """All condition names available in the sentiment table (for the explorer)."""
+    table = _sentiment_table()
+    if table is None:
+        return []
+    return sorted(table["condition"].unique().tolist())
+
+
+def condition_sentiment(condition: str, top_n: int = 15) -> pd.DataFrame | None:
+    """Top drugs for an arbitrary drugs.com condition (sentiment explorer)."""
+    table = _sentiment_table()
+    if table is None:
+        return None
+    rows = table[table["condition"] == condition].copy()
+    if rows.empty:
+        return None
+    return (
+        rows.sort_values(["sentiment_score", "n_reviews"], ascending=[False, False])
+        .head(top_n)
+        .reset_index(drop=True)
+    )
+
+
 if __name__ == "__main__":
     # Smoke test with a couple of hand-picked symptoms.
     syms = list_symptoms()
@@ -155,3 +254,7 @@ if __name__ == "__main__":
             }
         ),
     )
+    print()
+    sent = get_drug_sentiment("Migraine", top_n=5)
+    print("Sentiment demo (Migraine):")
+    print(sent.to_string(index=False) if sent is not None else "(no sentiment data)")
