@@ -115,8 +115,6 @@ st.markdown(
           display:inline-block; background:#0ea5e9; color:#fff; font-size:0.72rem;
           padding:1px 8px; border-radius:999px; vertical-align:middle; margin-left:6px;
       }
-      .footer { color:#94a3b8; font-size:0.8rem; text-align:center;
-                margin-top:2.5rem; border-top:1px solid #e2e8f0; padding-top:0.8rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -830,9 +828,3 @@ with tab4:
             st.dataframe(hdf, width="stretch", hide_index=True)
         else:
             st.info("No history yet — make a prediction!")
-
-st.markdown(
-    '<div class="footer">Built with scikit-learn, XGBoost & Streamlit · '
-    "Internship project @ Zidio Development · Educational use only</div>",
-    unsafe_allow_html=True,
-)
