@@ -58,6 +58,17 @@ def _seed_admin() -> None:
             pass  # another concurrent request seeded it first — fine
 
 
+def check_username(username: str) -> tuple[bool, str]:
+    """Live availability check for the signup form (no side effects)."""
+    _seed_admin()
+    username = username.strip().lower()
+    if not username.isalnum() or len(username) < 3:
+        return False, "Username must be alphanumeric, 3+ characters."
+    if db.get_user(username) is not None:
+        return False, "Username already taken."
+    return True, "Username available."
+
+
 def register_user(username: str, name: str, password: str) -> tuple[bool, str]:
     """Create a regular user account. Returns (ok, message)."""
     _seed_admin()

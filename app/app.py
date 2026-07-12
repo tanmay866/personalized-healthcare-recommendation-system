@@ -49,6 +49,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from auth import (  # noqa: E402
+    check_username,
     get_events,
     get_profile,
     list_users,
@@ -257,11 +258,25 @@ if st.session_state.user is None:
                         st.error("Invalid username or password.")
             st.caption("New here? Create a free account in the **Sign up** tab.")
         with signup_tab:
-            with st.form("signup", border=True):
-                name = st.text_input("Full name")
-                u2 = st.text_input("Choose a username")
-                p2 = st.text_input("Choose a password", type="password")
-                if st.form_submit_button("Create account", type="primary", width="stretch"):
+            # Not an st.form — forms only rerun on submit, and we want live
+            # username-availability feedback as the user types.
+            with st.container(border=True):
+                name = st.text_input("Full name", key="su_name")
+                u2 = st.text_input("Choose a username", key="su_user")
+                if u2.strip():
+                    ok_u, msg_u = check_username(u2)
+                    if ok_u:
+                        st.markdown(
+                            f"<small style='color:#16a34a'>✅ {msg_u}</small>",
+                            unsafe_allow_html=True,
+                        )
+                    else:
+                        st.markdown(
+                            f"<small style='color:#dc2626'>❌ {msg_u}</small>",
+                            unsafe_allow_html=True,
+                        )
+                p2 = st.text_input("Choose a password", type="password", key="su_pass")
+                if st.button("Create account", type="primary", width="stretch"):
                     ok, msg = register_user(u2, name, p2)
                     (st.success if ok else st.error)(msg)
     with right:
