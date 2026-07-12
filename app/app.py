@@ -762,9 +762,15 @@ with tab2:
 # =========================================================================== #
 with tab3:
     st.subheader("Explore real patient sentiment about medicines")
+    st.markdown(
+        "Choose a condition to see which medicines real patients found most "
+        "helpful — rankings come from an analysis of 215,000 patient reviews. "
+        "The strongest options appear top-right in the chart: well liked *and* "
+        "backed by many reviews."
+    )
     st.caption(
-        "Powered by a TF-IDF + Logistic Regression sentiment model trained on "
-        "200K+ patient reviews from drugs.com (90% test accuracy)."
+        "Sentiment model: TF-IDF + Logistic Regression trained on drugs.com "
+        "reviews (90% test accuracy)."
     )
 
     conditions = list_sentiment_conditions()
