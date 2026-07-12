@@ -39,6 +39,7 @@ This project deliberately uses **two complementary models**, each backed by a su
   - We tested predicting `risk_level` (Low/Med/High) but it carries **no learnable signal** (models sit at the majority-class baseline), so we transparently pivoted to `outcome_variable`, which does.
 - **Models compared:** Random Forest, Gradient Boosting, Logistic Regression, MLP — plus a **GridSearchCV tuning pass** on the winner.
 - **Result:** **80% test accuracy** vs a **52% majority-class baseline** (tuned Random Forest) — a genuine, honest improvement.
+- **Probability calibration:** the app surfaces raw probabilities, so we evaluated sigmoid and isotonic calibration against the raw model (Brier score / reliability curves — see `02_modeling.ipynb`). The raw model was already well calibrated (Brier 0.14); calibrated variants traded accuracy for negligible gains, so we kept it — with the analysis documented.
 
 ### Model 3 — Drug-Review Sentiment (NLP)
 - **Dataset:** UCI Drug Review dataset (drugs.com) — **215K patient reviews**, 3,400+ drugs, 800+ conditions. *(Not committed — 112 MB; `src/train_sentiment.py` documents the download. A 5K sample ships in `data/processed/` for exploration.)*
@@ -168,7 +169,7 @@ Set `API_JWT_SECRET` in production (a dev fallback is used otherwise).
 ## 🔮 Future enhancements
 
 - ~~REST API backend with JWT-token authentication~~ ✅ **Done** — see the REST API section above. Remaining: a hosted PostgreSQL database (current storage is SQLite through a plain-SQL layer, so the swap is a connection change, not a rewrite).
-- Larger, real-world clinical datasets and probability calibration.
+- ~~Probability calibration~~ ✅ **Done** — Brier-score evaluation of sigmoid/isotonic calibration with reliability curves in `02_modeling.ipynb`. Remaining: larger, real-world clinical datasets.
 - **Graph-based recommendations** (medical knowledge graphs) and **reinforcement learning** from user feedback.
 - TensorFlow/PyTorch deep-learning models (an sklearn MLP neural network is already included in the comparison).
 

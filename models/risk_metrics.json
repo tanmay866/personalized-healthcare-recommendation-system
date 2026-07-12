@@ -4,6 +4,9 @@
   "cv_accuracy": 0.7083,
   "test_accuracy": 0.8,
   "majority_baseline": 0.5233,
+  "calibration": "uncalibrated",
+  "test_brier_score": 0.1415,
+  "test_brier_uncalibrated": 0.1415,
   "features": [
     "fever",
     "cough",

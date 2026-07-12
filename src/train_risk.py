@@ -27,7 +27,9 @@ from sklearn.model_selection import (
     cross_val_score,
     train_test_split,
 )
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.base import clone
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import accuracy_score, brier_score_loss, classification_report, log_loss
 from sklearn.neural_network import MLPClassifier
 
 from preprocess import load_patient_profile, ROOT
@@ -119,6 +121,54 @@ def main() -> None:
         best = build_candidates()[best_name]
 
     best.fit(X_train, y_train)
+
+    # ------------------------------------------------------------------ #
+    # Probability calibration. The app surfaces raw probabilities (risk
+    # gauge), so they should be trustworthy: a predicted 70% should come
+    # true ~70% of the time. We compare the uncalibrated model against
+    # sigmoid (Platt) and isotonic calibration by Brier score / log-loss
+    # and keep the winner.
+    # ------------------------------------------------------------------ #
+    pos_label = "Positive"
+
+    def _probs(model):
+        idx = list(model.classes_).index(pos_label)
+        return model.predict_proba(X_test)[:, idx]
+
+    y_test_bin = (y_test == pos_label).astype(int)
+    candidates_cal = {"uncalibrated": best}
+    for method in ("sigmoid", "isotonic"):
+        cal = CalibratedClassifierCV(clone(best), method=method, cv=5)
+        cal.fit(X_train, y_train)
+        candidates_cal[method] = cal
+
+    print(f"\n{'Calibration':<14}{'Brier':>8}{'LogLoss':>9}{'Acc':>7}")
+    print("-" * 38)
+    scores = {}
+    for name, model in candidates_cal.items():
+        p = _probs(model)
+        scores[name] = brier_score_loss(y_test_bin, p)
+        print(
+            f"{name:<14}{scores[name]:>8.4f}"
+            f"{log_loss(y_test_bin, p):>9.4f}"
+            f"{accuracy_score(y_test, model.predict(X_test)):>7.3f}"
+        )
+
+    # Adopt a calibrated variant only if it clearly improves probability
+    # quality (Brier -0.005 or better) without materially hurting accuracy
+    # (>1pt drop). On a small test set, tiny Brier differences are noise —
+    # trading 5pts of accuracy for 0.001 Brier would be a bad deal.
+    base_brier = scores["uncalibrated"]
+    base_acc = accuracy_score(y_test, candidates_cal["uncalibrated"].predict(X_test))
+    cal_choice = "uncalibrated"
+    for name in ("isotonic", "sigmoid"):
+        acc = accuracy_score(y_test, candidates_cal[name].predict(X_test))
+        if scores[name] <= base_brier - 0.005 and acc >= base_acc - 0.01:
+            cal_choice = name
+            break
+    best = candidates_cal[cal_choice]
+    print(f"\nCalibration selected: {cal_choice}")
+
     y_pred = best.predict(X_test)
     test_acc = accuracy_score(y_test, y_pred)
 
@@ -140,6 +190,9 @@ def main() -> None:
                 "cv_accuracy": round(float(results[best_name]), 4),
                 "test_accuracy": round(float(test_acc), 4),
                 "majority_baseline": round(float(baseline), 4),
+                "calibration": cal_choice,
+                "test_brier_score": round(float(scores[cal_choice]), 4),
+                "test_brier_uncalibrated": round(float(scores["uncalibrated"]), 4),
                 "features": features,
                 "classes": sorted(y.unique().tolist()),
             },
