@@ -30,6 +30,7 @@ This project deliberately uses **two complementary models**, each backed by a su
 - **Dataset:** 4,920 records · 132 symptoms · 41 diseases (perfectly balanced).
 - **Approach:** symptoms encoded as a 132-dim binary vector → multi-class classification.
 - **Models compared:** Random Forest, SVM, Naive Bayes, XGBoost, and a **neural network** (MLP with 128→64 hidden layers) — 5-fold stratified CV.
+- **Deep learning comparison:** a **TensorFlow/Keras** model (symptom-token `Embedding(32) → GlobalAvgPool → Dense(128) → Dense(64) → softmax`, `src/train_deep.py`) also reaches 100% — the deployed app keeps RandomForest (equal accuracy, no 500MB TF dependency).
 - **Result:** **100% test accuracy** (Random Forest selected).
 - Also produces the **content-based filtering** artifact: cosine similarity between per-disease mean symptom vectors → "related diseases".
   - *Note:* this dataset is cleanly separable — every disease maps to a consistent symptom signature — so near-perfect accuracy is expected and is a property of the data, not overfitting. The engineering value here is the **complete, deployed end-to-end system**, not beating a hard benchmark.
@@ -75,6 +76,7 @@ personalized-healthcare-recommendation-system/
 │   ├── train_disease.py        # disease model + similarity artifact
 │   ├── train_risk.py           # risk model (+ GridSearch tuning)
 │   ├── train_sentiment.py      # NLP sentiment model on drug reviews
+│   ├── train_deep.py           # TensorFlow/Keras comparison model
 │   ├── build_knowledge_base.py # authors the recommendation KB
 │   ├── auth.py                 # users, roles, profiles, activity log
 │   ├── db.py                   # SQLite storage layer (users + activity)
@@ -169,16 +171,17 @@ Set `API_JWT_SECRET` in production (a dev fallback is used otherwise).
 | Disease predictor | 41-class symptom → disease | Random Forest | **100%** | 2.4% (random) |
 | Risk screener | Positive/Negative outcome | Random Forest | **~77%** | 52% (majority) |
 | Review sentiment (NLP) | Positive/Negative review | TF-IDF + Logistic Regression | **90%** (F1 0.93) | 72% (majority) |
+| Deep learning (comparison) | 41-class symptom → disease | Keras Embedding + Dense | **100%** | 2.4% (random) |
 
 ---
 
 ## 🔮 Future enhancements
 
-- ~~REST API backend with JWT-token authentication~~ ✅ **Done** — see the REST API section above. Remaining: a hosted PostgreSQL database (current storage is SQLite through a plain-SQL layer, so the swap is a connection change, not a rewrite).
-- ~~Probability calibration~~ ✅ **Done** — Brier-score evaluation of sigmoid/isotonic calibration with reliability curves in `02_modeling.ipynb`. Remaining: larger, real-world clinical datasets.
-- ~~Graph-based recommendations~~ ✅ **Done** — medical knowledge graph with Personalized-PageRank related diseases (`src/knowledge_graph.py`) and an interactive network view in the app.
-- ~~Reinforcement learning from user feedback~~ ✅ **Done** — Thompson-sampling bandit (`src/bandit.py`): 👍/👎 votes update Beta posteriors per (disease, medicine) arm and re-rank recommendations. Remaining: full contextual bandits / off-policy evaluation on real traffic.
-- TensorFlow/PyTorch deep-learning models (an sklearn MLP neural network is already included in the comparison).
+- **Hosted PostgreSQL** — storage is currently SQLite behind a plain-SQL layer (`src/db.py`), so the swap is a connection change, not a rewrite.
+- **Larger, real-world clinical datasets** — the current datasets are educational; production would need clinically validated data and re-evaluation.
+- **Contextual bandits on live traffic** — the Thompson-sampling bandit adapts to feedback today; real deployments would add user-context features and off-policy evaluation.
+- **Collaborative filtering (user–item SVD)** — needs per-user interaction history at scale; the current crowd signal comes from 200K+ drug reviews.
+- **PyTorch model variants** and larger architectures on richer data.
 
 ---
 

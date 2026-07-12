@@ -1,0 +1,9 @@
+{
+  "framework": "TensorFlow 2.21.0",
+  "architecture": "Embedding(133,32) -> GlobalAvgPool -> Dense(128) -> Dense(64) -> softmax(41)",
+  "epochs": 25,
+  "parameters": 19401,
+  "test_accuracy": 1.0,
+  "final_val_accuracy": 1.0,
+  "note": "Comparison model only \u2014 the deployed app uses RandomForest (equal accuracy, no TF dependency)."
+}
