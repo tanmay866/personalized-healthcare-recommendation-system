@@ -37,6 +37,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from auth import list_users, log_event, register_user, verify_user  # noqa: E402
 from bandit import rank_medicines, record_feedback  # noqa: E402
+from clinical import clinical_metrics, predict_clinical_risk  # noqa: E402
 from knowledge_graph import ego_graph_data, graph_related_diseases, graph_stats  # noqa: E402
 from recommend import (  # noqa: E402
     condition_sentiment,
@@ -229,6 +230,27 @@ def sentiment_ep(condition: str, user: dict = Depends(current_user)):
 @app.get("/sentiment", tags=["ml"])
 def sentiment_conditions_ep(user: dict = Depends(current_user)):
     return {"conditions": list_sentiment_conditions()}
+
+
+@app.post("/predict/clinical/{which}", tags=["ml"])
+def clinical_ep(which: str, values: dict, user: dict = Depends(current_user)):
+    """Disease-specific risk from models trained on real clinical data.
+
+    ``which`` is ``heart`` (UCI Cleveland) or ``diabetes`` (Pima Indians).
+    ``values`` maps feature name -> value; missing features are median-imputed.
+    """
+    if which not in ("heart", "diabetes"):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Model must be 'heart' or 'diabetes'")
+    known = set(clinical_metrics()[which]["features"])
+    bad = [k for k in values if k not in known]
+    if bad:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            f"Unknown features: {bad}. Valid: {sorted(known)}",
+        )
+    res = predict_clinical_risk(which, values)
+    log_event(user["username"], f"{which}_risk_check", {**res, "via": "api"})
+    return {"model": which, **res, "model_metrics": clinical_metrics()[which]}
 
 
 @app.post("/feedback", status_code=201, tags=["ml"])

@@ -18,7 +18,7 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 | 4 | **Content-Based Filtering** | "Related diseases" via cosine similarity between disease symptom profiles. |
 | 4b | **Knowledge-Graph Recommendations** | A 307-node medical graph (diseases ↔ symptoms ↔ medications ↔ specialists); **Personalized PageRank** finds related diseases through multi-hop paths, with an interactive network visualization. |
 | 5 | **Adaptive Medicine Ranking (RL)** | Real medicines start at a hybrid score (60% NLP review sentiment + 40% star rating, 200K+ reviews) and **adapt to 👍/👎 user feedback via a Thompson-sampling bandit** — Beta posteriors per (disease, medicine) arm. |
-| 6 | **Health Risk Screening** | Symptoms + vitals (age, gender, blood pressure, cholesterol) → likelihood of a positive diagnosis. |
+| 6 | **Health Risk Screening** | Symptoms + vitals → likelihood of a positive diagnosis, **plus disease-specific risk calculators trained on real clinical data**: ❤️ heart disease (UCI Cleveland, AUC 0.95) and 🩸 diabetes (Pima Indians, AUC 0.81). |
 | 7 | **Sentiment Explorer (NLP)** | Per-condition drug sentiment rankings + a live review analyzer powered by the trained NLP model. |
 | 8 | **Analytics Dashboard** | Usage trends, disease popularity rankings, model performance comparison, dataset insights; admins see all user activity. |
 
@@ -56,6 +56,12 @@ This project deliberately uses **two complementary models**, each backed by a su
 - **Result:** **80% test accuracy** vs a **52% majority-class baseline** (tuned Random Forest) — a genuine, honest improvement.
 - **Probability calibration:** the app surfaces raw probabilities, so we evaluated sigmoid and isotonic calibration against the raw model (Brier score / reliability curves — see `02_modeling.ipynb`). The raw model was already well calibrated (Brier 0.14); calibrated variants traded accuracy for negligible gains, so we kept it — with the analysis documented.
 
+### Models 2b — Clinical Risk Calculators (real patient data)
+- **Heart disease:** UCI Cleveland dataset — **303 real patients**, 13 clinical features (chest pain type, ST depression, fluoroscopy vessels…). Logistic Regression selected by CV ROC-AUC: **test AUC 0.95, 87% accuracy** vs 54% baseline.
+- **Diabetes:** Pima Indians dataset — **768 real patients** (glucose, BMI, insulin, pedigree…). Logistic Regression: **test AUC 0.81, 71% accuracy** vs 65% baseline.
+- Real-data handling: Cleveland's missing `ca`/`thal` values and Pima's **zeros-as-hidden-missing** (374 impossible insulin readings) are median-imputed *inside* the sklearn Pipeline, so inference tolerates missing inputs too.
+- Notable: **Logistic Regression beat Random Forest and Gradient Boosting on both** — the classic result on small clinical datasets, where simpler models generalize better.
+
 ### Model 3 — Drug-Review Sentiment (NLP)
 - **Dataset:** UCI Drug Review dataset (drugs.com) — **215K patient reviews**, 3,400+ drugs, 800+ conditions. *(Not committed — 112 MB; `src/train_sentiment.py` documents the download. A 5K sample ships in `data/processed/` for exploration.)*
 - **Approach:** ratings → binary sentiment labels (≥7 positive, ≤4 negative); **TF-IDF (uni+bi-grams, 50K features) → Logistic Regression**.
@@ -90,6 +96,8 @@ personalized-healthcare-recommendation-system/
 │   ├── train_risk.py           # risk model (+ GridSearch tuning)
 │   ├── train_sentiment.py      # NLP sentiment model on drug reviews
 │   ├── train_deep.py           # TensorFlow/Keras comparison model
+│   ├── train_clinical.py       # heart + diabetes models (real clinical data)
+│   ├── clinical.py             # clinical risk inference + UI specs
 │   ├── build_knowledge_base.py # authors the recommendation KB
 │   ├── auth.py                 # users, roles, profiles, activity log
 │   ├── db.py                   # DB layer (SQLite/PostgreSQL via SQLAlchemy)
@@ -148,6 +156,7 @@ uvicorn api.main:app --port 8000
 | GET | `/sentiment/{condition}` | JWT | Top drugs for a condition by review sentiment |
 | GET | `/graph/{disease}` | JWT | Knowledge-graph neighborhood + graph-walk related diseases |
 | GET | `/medicines/{disease}` | JWT | Adaptive (bandit-ranked) medicine recommendations |
+| POST | `/predict/clinical/{heart\|diabetes}` | JWT | Disease-specific risk from real-clinical-data models |
 | POST | `/feedback` | JWT | 👍/👎 medicine feedback — trains the RL bandit |
 | GET | `/admin/users` | JWT (Admin) | List users — role-based access control |
 | GET | `/health` | — | Liveness probe |
@@ -199,13 +208,15 @@ Free hosted options: [Neon](https://neon.tech) or [Supabase](https://supabase.co
 | Risk screener | Positive/Negative outcome | Random Forest | **~77%** | 52% (majority) |
 | Review sentiment (NLP) | Positive/Negative review | TF-IDF + Logistic Regression | **90%** (F1 0.93) | 72% (majority) |
 | Deep learning (comparison) | 41-class symptom → disease | Keras Embedding + Dense | **100%** | 2.4% (random) |
+| ❤️ Heart risk (real data) | CAD present/absent | Logistic Regression | **87%** (AUC 0.95) | 54% (majority) |
+| 🩸 Diabetes risk (real data) | Diabetes yes/no | Logistic Regression | **71%** (AUC 0.81) | 65% (majority) |
 
 ---
 
 ## 🔮 Future enhancements
 
 - **Database HA & observability** — the live app runs on a managed PostgreSQL (Neon) via `DATABASE_URL`; production hardening would add backups, monitoring and connection retry policies.
-- **Larger, real-world clinical datasets** — the current datasets are educational; production would need clinically validated data and re-evaluation.
+- **Larger clinical datasets** — real patient data now powers the heart and diabetes calculators (UCI Cleveland, Pima); the symptom→disease model still uses an educational dataset, and upgrading it to a research-grade source like DDXPlus (1.3M synthetic-clinical patients) remains future work.
 - **Contextual bandits on live traffic** — the Thompson-sampling bandit adapts to feedback today; real deployments would add user-context features and off-policy evaluation.
 - **Collaborative filtering (user–item SVD)** — needs per-user interaction history at scale; the current crowd signal comes from 200K+ drug reviews.
 - **PyTorch model variants** and larger architectures on richer data.

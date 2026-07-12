@@ -57,6 +57,7 @@ from auth import (  # noqa: E402
     verify_user,
 )
 from bandit import rank_medicines, record_feedback  # noqa: E402
+from clinical import clinical_metrics, clinical_specs, predict_clinical_risk  # noqa: E402
 from knowledge_graph import ego_graph_data, graph_related_diseases  # noqa: E402
 from recommend import (  # noqa: E402
     condition_sentiment,
@@ -515,70 +516,133 @@ with tab1:
 # =========================================================================== #
 # Tab 2 — risk screening (prefilled from profile)
 # =========================================================================== #
+def _clinical_form(which: str) -> dict:
+    """Render a clinical input form from the saved spec; return feature values."""
+    spec = clinical_specs()[which]
+    values = {}
+    cols = st.columns(3)
+    for i, (feat, f) in enumerate(spec["fields"].items()):
+        with cols[i % 3]:
+            if f["kind"] == "select":
+                choice = st.selectbox(f["label"], list(f["options"].keys()), key=f"{which}_{feat}")
+                values[feat] = f["options"][choice]
+            elif f["kind"] == "float":
+                values[feat] = st.number_input(
+                    f["label"], float(f["min"]), float(f["max"]), float(f["default"]),
+                    step=0.1, key=f"{which}_{feat}",
+                )
+            else:
+                values[feat] = st.number_input(
+                    f["label"], int(f["min"]), int(f["max"]), int(f["default"]),
+                    key=f"{which}_{feat}",
+                )
+    return values
+
+
+def _risk_gauge(prob_pct: float, title: str):
+    gauge = go.Figure(
+        go.Indicator(
+            mode="gauge+number", value=prob_pct, number={"suffix": "%"},
+            title={"text": title},
+            gauge={
+                "axis": {"range": [0, 100]},
+                "bar": {"color": ACCENT},
+                "steps": [
+                    {"range": [0, 35], "color": "#dcfce7"},
+                    {"range": [35, 60], "color": "#fef9c3"},
+                    {"range": [60, 100], "color": "#fee2e2"},
+                ],
+            },
+        )
+    )
+    gauge.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=10))
+    st.plotly_chart(gauge, width="stretch")
+
+
 with tab2:
-    st.subheader("Enter your health profile")
-    prof = get_profile(user["username"])
-    if prof:
-        st.caption("✅ Prefilled from your saved profile — adjust as needed.")
-    else:
-        st.caption("Tip: save your profile in the sidebar to prefill this form.")
+    screen = st.radio(
+        "Choose a screening:",
+        ["🩺 General screening", "❤️ Heart disease risk", "🩸 Diabetes risk"],
+        horizontal=True,
+    )
 
-    level_map = {"Low": 0, "Normal": 1, "High": 2}
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        age = st.number_input("Age", 1, 120, int(prof.get("age", 35)), key="risk_age")
-        gender = st.radio(
-            "Gender", ["Female", "Male"],
-            index=1 if prof.get("gender") == "Male" else 0, horizontal=True, key="risk_gender",
+    if screen != "🩺 General screening":
+        which = "heart" if "Heart" in screen else "diabetes"
+        spec = clinical_specs()[which]
+        cm = clinical_metrics()[which]
+        st.subheader(spec["title"].split(" (")[0])
+        st.caption(
+            f"Trained on **real clinical data** — {spec['title'].split('(')[1].rstrip(')')} · "
+            f"{cm['best_model']} · test AUC **{cm['test_auc']:.2f}** · "
+            f"accuracy {cm['test_accuracy']*100:.0f}% (baseline {cm['majority_baseline']*100:.0f}%)."
         )
-    with col2:
-        fever = st.checkbox("Fever")
-        cough = st.checkbox("Cough")
-        fatigue = st.checkbox("Fatigue")
-        breathing = st.checkbox("Difficulty breathing")
-    with col3:
-        bp = st.select_slider("Blood pressure", ["Low", "Normal", "High"], value=prof.get("bp", "Normal"), key="risk_bp")
-        chol = st.select_slider("Cholesterol level", ["Low", "Normal", "High"], value=prof.get("chol", "Normal"), key="risk_chol")
-
-    if st.button("📈 Assess Risk", type="primary", width="stretch"):
-        profile = {
-            "fever": int(fever), "cough": int(cough), "fatigue": int(fatigue),
-            "difficulty_breathing": int(breathing), "age": age,
-            "gender": 1 if gender == "Male" else 0,
-            "blood_pressure": level_map[bp], "cholesterol_level": level_map[chol],
-        }
-        res = predict_risk(profile)
-        prob = res["probability"] * 100
-        log_event(user["username"], "risk_check", {"outcome": res["outcome"], "probability": res["probability"]})
-
-        gauge = go.Figure(
-            go.Indicator(
-                mode="gauge+number", value=prob, number={"suffix": "%"},
-                title={"text": "Likelihood of positive diagnosis"},
-                gauge={
-                    "axis": {"range": [0, 100]},
-                    "bar": {"color": ACCENT},
-                    "steps": [
-                        {"range": [0, 40], "color": "#dcfce7"},
-                        {"range": [40, 70], "color": "#fef9c3"},
-                        {"range": [70, 100], "color": "#fee2e2"},
-                    ],
-                },
+        vals = _clinical_form(which)
+        if st.button(f"Assess {which} risk", type="primary", width="stretch"):
+            res = predict_clinical_risk(which, vals)
+            prob = res["risk_probability"] * 100
+            log_event(user["username"], f"{which}_risk_check",
+                      {"probability": res["risk_probability"], "label": res["risk_label"]})
+            _risk_gauge(prob, f"{'Heart disease' if which == 'heart' else 'Diabetes'} risk")
+            if res["risk_label"] == "High":
+                st.error(f"⚠️ **High risk** ({prob:.1f}%). Please consult a "
+                         f"{'cardiologist' if which == 'heart' else 'diabetologist'}.")
+            elif res["risk_label"] == "Moderate":
+                st.warning(f"🟡 **Moderate risk** ({prob:.1f}%). A check-up is a good idea.")
+            else:
+                st.success(f"✅ **Low risk** ({prob:.1f}%). Keep up the healthy habits.")
+            st.markdown(
+                '<div class="disclaimer">⚠️ A statistical screening from a research '
+                "dataset — not a diagnosis. Always consult a doctor.</div>",
+                unsafe_allow_html=True,
             )
-        )
-        gauge.update_layout(height=300, margin=dict(l=20, r=20, t=50, b=10))
-        st.plotly_chart(gauge, width="stretch")
-
-        if res["outcome"] == "Positive":
-            st.error(f"⚠️ Elevated risk — model predicts a **Positive** outcome ({prob:.1f}%). Consider consulting a doctor.")
+    else:
+        st.subheader("Enter your health profile")
+        prof = get_profile(user["username"])
+        if prof:
+            st.caption("✅ Prefilled from your saved profile — adjust as needed.")
         else:
-            st.success(f"✅ Lower risk — model predicts a **Negative** outcome (positive likelihood {prob:.1f}%).")
+            st.caption("Tip: save your profile in the sidebar to prefill this form.")
 
-        st.markdown(
-            '<div class="disclaimer">⚠️ This screening is a statistical estimate on a '
-            "small dataset, not a diagnosis. Consult a doctor for any health concern.</div>",
-            unsafe_allow_html=True,
-        )
+        level_map = {"Low": 0, "Normal": 1, "High": 2}
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            age = st.number_input("Age", 1, 120, int(prof.get("age", 35)), key="risk_age")
+            gender = st.radio(
+                "Gender", ["Female", "Male"],
+                index=1 if prof.get("gender") == "Male" else 0, horizontal=True, key="risk_gender",
+            )
+        with col2:
+            fever = st.checkbox("Fever")
+            cough = st.checkbox("Cough")
+            fatigue = st.checkbox("Fatigue")
+            breathing = st.checkbox("Difficulty breathing")
+        with col3:
+            bp = st.select_slider("Blood pressure", ["Low", "Normal", "High"], value=prof.get("bp", "Normal"), key="risk_bp")
+            chol = st.select_slider("Cholesterol level", ["Low", "Normal", "High"], value=prof.get("chol", "Normal"), key="risk_chol")
+
+        if st.button("📈 Assess Risk", type="primary", width="stretch"):
+            profile = {
+                "fever": int(fever), "cough": int(cough), "fatigue": int(fatigue),
+                "difficulty_breathing": int(breathing), "age": age,
+                "gender": 1 if gender == "Male" else 0,
+                "blood_pressure": level_map[bp], "cholesterol_level": level_map[chol],
+            }
+            res = predict_risk(profile)
+            prob = res["probability"] * 100
+            log_event(user["username"], "risk_check", {"outcome": res["outcome"], "probability": res["probability"]})
+
+            _risk_gauge(prob, "Likelihood of positive diagnosis")
+
+            if res["outcome"] == "Positive":
+                st.error(f"⚠️ Elevated risk — model predicts a **Positive** outcome ({prob:.1f}%). Consider consulting a doctor.")
+            else:
+                st.success(f"✅ Lower risk — model predicts a **Negative** outcome (positive likelihood {prob:.1f}%).")
+
+            st.markdown(
+                '<div class="disclaimer">⚠️ This screening is a statistical estimate on a '
+                "small dataset, not a diagnosis. Consult a doctor for any health concern.</div>",
+                unsafe_allow_html=True,
+            )
 
 # =========================================================================== #
 # Tab 3 — medicine sentiment explorer (NLP)

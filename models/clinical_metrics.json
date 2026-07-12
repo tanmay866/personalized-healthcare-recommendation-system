@@ -1,0 +1,45 @@
+{
+  "heart": {
+    "best_model": "LogisticRegression",
+    "cv_auc": 0.896,
+    "test_auc": 0.9513,
+    "test_accuracy": 0.8689,
+    "majority_baseline": 0.5413,
+    "n_patients": 303,
+    "positive_rate": 0.4587,
+    "features": [
+      "age",
+      "sex",
+      "cp",
+      "trestbps",
+      "chol",
+      "fbs",
+      "restecg",
+      "thalach",
+      "exang",
+      "oldpeak",
+      "slope",
+      "ca",
+      "thal"
+    ]
+  },
+  "diabetes": {
+    "best_model": "LogisticRegression",
+    "cv_auc": 0.8434,
+    "test_auc": 0.813,
+    "test_accuracy": 0.7078,
+    "majority_baseline": 0.651,
+    "n_patients": 768,
+    "positive_rate": 0.349,
+    "features": [
+      "pregnancies",
+      "glucose",
+      "blood_pressure",
+      "skin_thickness",
+      "insulin",
+      "bmi",
+      "diabetes_pedigree",
+      "age"
+    ]
+  }
+}
