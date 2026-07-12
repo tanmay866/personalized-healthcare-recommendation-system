@@ -30,15 +30,18 @@ from pathlib import Path
 # this env var lazily at first memory-pool use, which happens after this line.
 os.environ.setdefault("ARROW_DEFAULT_MEMORY_POOL", "system")
 
+import jwt
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
+from datetime import datetime, timedelta, timezone
 
 # Streamlit Cloud provides secrets via st.secrets — bridge DATABASE_URL to the
 # environment before the first db call (the engine is created lazily), so a
 # hosted PostgreSQL can be configured without code changes.
 try:
-    for _secret in ("DATABASE_URL", "ADMIN_PASSWORD"):
+    for _secret in ("DATABASE_URL", "ADMIN_PASSWORD", "API_JWT_SECRET"):
         if _secret in st.secrets:
             os.environ.setdefault(_secret, st.secrets[_secret])
 except Exception:
@@ -229,12 +232,74 @@ def _bar(x, y, title, color=ACCENT, height=300, xaxis="", horizontal=True):
 
 
 # =========================================================================== #
+# Persistent login ("remember me" cookie)
+#
+# Streamlit session state dies on every page refresh, so we keep a signed
+# JWT in a browser cookie: set on login, read back (st.context.cookies) to
+# restore the session, deleted on logout. The signature (HS256) makes the
+# cookie tamper-proof; set API_JWT_SECRET in production.
+# =========================================================================== #
+_COOKIE = "hc_auth"
+_COOKIE_SECRET = os.environ.get("API_JWT_SECRET", "dev-secret-change-in-production")
+_COOKIE_DAYS = 7
+
+
+def _issue_login_token(user: dict) -> str:
+    return jwt.encode(
+        {
+            "sub": user["username"],
+            "name": user["name"],
+            "role": user["role"],
+            "exp": datetime.now(timezone.utc) + timedelta(days=_COOKIE_DAYS),
+        },
+        _COOKIE_SECRET,
+        algorithm="HS256",
+    )
+
+
+def _write_cookie_js(value: str, max_age: int) -> None:
+    """Set/delete the auth cookie from a zero-height component iframe."""
+    components.html(
+        f"""<script>
+        const secure = window.parent.location.protocol === 'https:' ? '; Secure' : '';
+        window.parent.document.cookie =
+            "{_COOKIE}={value}; path=/; max-age={max_age}; SameSite=Lax" + secure;
+        </script>""",
+        height=0,
+    )
+
+
+def _restore_from_cookie() -> dict | None:
+    token = st.context.cookies.get(_COOKIE)
+    if not token:
+        return None
+    try:
+        p = jwt.decode(token, _COOKIE_SECRET, algorithms=["HS256"])
+    except jwt.InvalidTokenError:
+        return None
+    # Re-check against the DB so deleted users / role changes take effect.
+    import db
+
+    row = db.get_user(p["sub"])
+    if row is None:
+        return None
+    return {"username": row["username"], "name": row["name"], "role": row["role"]}
+
+
+# =========================================================================== #
 # Authentication gate
 # =========================================================================== #
 if "user" not in st.session_state:
     st.session_state.user = None
 
+if st.session_state.user is None and not st.session_state.get("just_logged_out"):
+    restored = _restore_from_cookie()
+    if restored is not None:
+        st.session_state.user = restored
+
 if st.session_state.user is None:
+    if st.session_state.pop("just_logged_out", False):
+        _write_cookie_js("", 0)  # delete the cookie client-side
     st.markdown('<p class="main-title">🩺 Personalized Healthcare & Medicine Recommendation System</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">ML-powered disease prediction, medicine recommendations, risk screening & review-sentiment analytics.</p>', unsafe_allow_html=True)
     st.write("")
@@ -306,6 +371,9 @@ if st.session_state.user is None:
 
 user = st.session_state.user
 
+# Refresh the remember-me cookie on every logged-in render (sliding expiry).
+_write_cookie_js(_issue_login_token(user), _COOKIE_DAYS * 24 * 3600)
+
 # =========================================================================== #
 # Sidebar (logged in)
 # =========================================================================== #
@@ -316,6 +384,7 @@ with st.sidebar:
     )
     if st.button("Log out", width="stretch"):
         st.session_state.user = None
+        st.session_state.just_logged_out = True
         st.rerun()
 
     st.divider()
