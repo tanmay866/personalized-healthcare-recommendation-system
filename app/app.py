@@ -937,28 +937,33 @@ with tab5:
         st.subheader("About this application")
         st.markdown(
             """
-            A full-stack machine-learning system that predicts a likely disease
-            from a patient's symptoms, recommends **medicines, precautions, diet
-            and the right specialist**, screens **health risk** with models
-            trained on **real clinical data**, and adapts its medicine ranking
-            to user feedback with **reinforcement learning**.
+            This system takes a patient's symptoms and returns a likely
+            diagnosis along with practical guidance: which medicines real
+            patients rate highest for that condition, what precautions and
+            diet to follow, and which specialist to consult. Separate
+            calculators estimate heart-disease and diabetes risk using models
+            trained on real clinical records.
 
-            **How the pieces fit together:**
-            1. 🔬 **Disease predictor** — RandomForest over 132 symptoms → 41
-               diseases (4,920 training records).
-            2. ❤️🩸 **Clinical risk calculators** — trained on real patients:
-               UCI Cleveland heart data (303) and Pima diabetes data (768),
-               with proper handling of real-world missing values.
-            3. 💬 **NLP sentiment engine** — TF-IDF + Logistic Regression over
-               **215K real drug reviews**, powering medicine rankings.
-            4. 🕸 **Medical knowledge graph** — 307 nodes; Personalized
-               PageRank finds related diseases through shared symptoms,
-               medications and specialists.
-            5. 🎰 **RL feedback bandit** — Thompson sampling re-ranks
-               medicines as users vote 👍/👎.
-            6. 🔐 **Production backing** — hosted PostgreSQL, salted-hash
-               auth with roles, persistent sessions, plus a JWT-secured
-               REST API (FastAPI).
+            The disease predictor is a Random Forest trained on 4,920 records
+            covering 132 symptoms and 41 conditions. Medicine suggestions are
+            ranked by a sentiment model (TF-IDF with logistic regression)
+            trained on 215,000 drug reviews from drugs.com, blended with star
+            ratings; the ranking then adapts as users vote on recommendations,
+            using a Thompson-sampling bandit. Related conditions are found two
+            ways — direct symptom similarity, and PageRank over a medical
+            knowledge graph that connects diseases through shared symptoms,
+            medications and specialists.
+
+            The clinical risk calculators are trained on the UCI Cleveland
+            heart-disease dataset (303 patients) and the Pima Indians diabetes
+            dataset (768 patients), with the usual defects of real medical
+            data — missing values, impossible zero readings — handled inside
+            the model pipeline.
+
+            User accounts, activity history and feedback are stored in a
+            relational database (PostgreSQL in production), and the same
+            functionality is available programmatically through a JWT-secured
+            REST API.
             """
         )
         st.markdown("##### Model performance")
@@ -966,38 +971,38 @@ with tab5:
             """
             | Model | Data | Result |
             |---|---|---|
-            | Disease predictor | 4,920 records · 41 diseases | 100% test accuracy |
-            | ❤️ Heart risk | 303 real patients (UCI Cleveland) | AUC 0.95 · 87% |
-            | 🩸 Diabetes risk | 768 real patients (Pima) | AUC 0.81 · 71% |
-            | Review sentiment (NLP) | 215K drugs.com reviews | 90% · F1 0.93 |
-            | Outcome screening | symptoms + vitals | 80% vs 52% baseline |
+            | Disease predictor | 4,920 records, 41 diseases | 100% test accuracy |
+            | Heart-disease risk | 303 patients (UCI Cleveland) | AUC 0.95, accuracy 87% |
+            | Diabetes risk | 768 patients (Pima Indians) | AUC 0.81, accuracy 71% |
+            | Review sentiment | 215K drug reviews | 90% accuracy, F1 0.93 |
+            | Outcome screening | symptoms and vitals | 80% vs 52% baseline |
             """
         )
         st.caption(
-            "Tech: Python · scikit-learn · XGBoost · TensorFlow (comparison) · "
-            "NetworkX · FastAPI · SQLAlchemy · PostgreSQL · Streamlit · Plotly"
+            "Python · scikit-learn · XGBoost · NetworkX · FastAPI · "
+            "SQLAlchemy · PostgreSQL · Streamlit · Plotly"
         )
     with a2:
         st.markdown(
             """
             <div class="creator-card">
-              <h4 style="margin:0 0 0.4rem 0">👨‍💻 Created by</h4>
-              <p style="font-size:1.35rem; font-weight:800; margin:0 0 0.6rem 0">
+              <p style="font-size:0.85rem; letter-spacing:0.08em; text-transform:uppercase;
+                        color:#64748b; margin:0 0 0.3rem 0">Developed by</p>
+              <p style="font-size:1.35rem; font-weight:800; margin:0 0 0.5rem 0">
                 Tanmay Patel</p>
-              <p style="margin:0 0 0.3rem 0">Data Science & Machine Learning</p>
-              <p style="margin:0 0 0.8rem 0; color:#64748b">
-                Designed and built end-to-end — from raw datasets and model
-                training to a deployed, database-backed product.</p>
+              <p style="margin:0 0 0.8rem 0; color:#475569">
+                Data analysis, model training, recommendation engine, web
+                application, API, database and deployment.</p>
               <p style="margin:0">
-                🔗 <a href="https://github.com/tanmay866/personalized-healthcare-recommendation-system"
-                target="_blank">GitHub repository</a></p>
+                <a href="https://github.com/tanmay866/personalized-healthcare-recommendation-system"
+                target="_blank">View the source on GitHub</a></p>
             </div>
             """,
             unsafe_allow_html=True,
         )
         st.write("")
         st.markdown(
-            '<div class="disclaimer">⚠️ Educational project — not a medical '
+            '<div class="disclaimer">Educational project — not a medical '
             "device. Predictions and recommendations are illustrative; always "
             "consult a qualified doctor.</div>",
             unsafe_allow_html=True,
