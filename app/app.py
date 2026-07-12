@@ -986,9 +986,8 @@ with tab5:
                 Tanmay Patel</p>
               <p style="margin:0 0 0.3rem 0">Data Science & Machine Learning</p>
               <p style="margin:0 0 0.8rem 0; color:#64748b">
-                Built end-to-end as an ML internship project at
-                <b>Zidio Development</b> — from raw datasets to a deployed,
-                database-backed product.</p>
+                Designed and built end-to-end — from raw datasets and model
+                training to a deployed, database-backed product.</p>
               <p style="margin:0">
                 🔗 <a href="https://github.com/tanmay866/personalized-healthcare-recommendation-system"
                 target="_blank">GitHub repository</a></p>
