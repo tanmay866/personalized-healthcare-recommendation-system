@@ -47,6 +47,7 @@ from auth import (  # noqa: E402
     update_profile,
     verify_user,
 )
+from knowledge_graph import ego_graph_data, graph_related_diseases  # noqa: E402
 from recommend import (  # noqa: E402
     condition_sentiment,
     get_drug_sentiment,
@@ -143,6 +144,67 @@ def _rec_card(title: str, items, is_list: bool = True) -> None:
     else:
         body = f"<p style='margin:0'>{items}</p>"
     st.markdown(f'<div class="rec-card"><h4>{title}</h4>{body}</div>', unsafe_allow_html=True)
+
+
+_KIND_COLORS = {
+    "disease": "#2563eb",
+    "symptom": "#f59e0b",
+    "medication": "#10b981",
+    "specialist": "#8b5cf6",
+}
+
+
+def _ego_graph_fig(disease: str):
+    """Interactive plotly network of the disease's knowledge-graph neighborhood."""
+    data = ego_graph_data(disease)
+    if not data:
+        return None
+    import networkx as nx
+
+    g = nx.Graph()
+    for e in data["edges"]:
+        g.add_edge(e["source"], e["target"], weight=e["weight"])
+    pos = nx.spring_layout(g, seed=42, k=1.4)
+
+    edge_x, edge_y = [], []
+    for e in data["edges"]:
+        x0, y0 = pos[e["source"]]
+        x1, y1 = pos[e["target"]]
+        edge_x += [x0, x1, None]
+        edge_y += [y0, y1, None]
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(x=edge_x, y=edge_y, mode="lines",
+                   line=dict(width=1, color="#cbd5e1"), hoverinfo="none")
+    )
+    kinds = {n["id"]: n["kind"] for n in data["nodes"]}
+    for kind, color in _KIND_COLORS.items():
+        xs, ys, names = [], [], []
+        for node_id, k in kinds.items():
+            if k == kind and node_id in pos:
+                xs.append(pos[node_id][0]); ys.append(pos[node_id][1])
+                names.append(node_id)
+        if xs:
+            fig.add_trace(
+                go.Scatter(
+                    x=xs, y=ys, mode="markers+text", name=kind,
+                    text=[n if len(n) < 22 else n[:20] + "…" for n in names],
+                    hovertext=names, hoverinfo="text",
+                    textposition="top center", textfont=dict(size=9),
+                    marker=dict(
+                        size=26 if kind == "disease" else 14,
+                        color=color, line=dict(width=1, color="#fff"),
+                    ),
+                )
+            )
+    fig.update_layout(
+        height=420, margin=dict(l=10, r=10, t=30, b=10),
+        showlegend=True, legend=dict(orientation="h", y=-0.05),
+        xaxis=dict(visible=False), yaxis=dict(visible=False),
+        title=f"Knowledge graph around {disease}",
+    )
+    return fig
 
 
 def _bar(x, y, title, color=ACCENT, height=300, xaxis="", horizontal=True):
@@ -388,6 +450,30 @@ with tab1:
                         margin=dict(l=10, r=10, t=40, b=10), xaxis_title="Score",
                     )
                     st.plotly_chart(sfig, width="stretch")
+
+            # Graph-based recommendations: knowledge-graph neighborhood + PPR.
+            st.divider()
+            st.subheader("🕸 Knowledge Graph")
+            g1, g2 = st.columns([1.3, 1])
+            with g1:
+                gfig = _ego_graph_fig(disease)
+                if gfig is not None:
+                    st.plotly_chart(gfig, width="stretch")
+            with g2:
+                st.markdown("##### Graph-walk related diseases")
+                st.caption(
+                    "Personalized PageRank over a medical knowledge graph "
+                    "(diseases ↔ symptoms ↔ medications ↔ specialists). "
+                    "Connections can flow through multi-hop paths — e.g., a "
+                    "shared specialist or medication — not just direct "
+                    "symptom overlap."
+                )
+                for r in graph_related_diseases(disease, top_n=5):
+                    st.markdown(
+                        f'<span class="pill-ghost">{r["disease"]}</span> '
+                        f'<small style="color:#94a3b8">score {r["score"]}</small>',
+                        unsafe_allow_html=True,
+                    )
 
             st.markdown(
                 '<div class="disclaimer">⚠️ These recommendations are general and '

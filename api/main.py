@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from auth import list_users, log_event, register_user, verify_user  # noqa: E402
+from knowledge_graph import ego_graph_data, graph_related_diseases, graph_stats  # noqa: E402
 from recommend import (  # noqa: E402
     condition_sentiment,
     get_drug_sentiment,
@@ -221,6 +222,20 @@ def sentiment_ep(condition: str, user: dict = Depends(current_user)):
 @app.get("/sentiment", tags=["ml"])
 def sentiment_conditions_ep(user: dict = Depends(current_user)):
     return {"conditions": list_sentiment_conditions()}
+
+
+@app.get("/graph/{disease}", tags=["ml"])
+def graph_ep(disease: str, user: dict = Depends(current_user)):
+    """Knowledge-graph neighborhood + graph-walk related diseases."""
+    ego = ego_graph_data(disease)
+    if ego is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Unknown disease: {disease}")
+    return {
+        "disease": disease,
+        "ego_graph": ego,
+        "graph_related": graph_related_diseases(disease),
+        "graph_stats": graph_stats(),
+    }
 
 
 # --------------------------------------------------------------------------- #
