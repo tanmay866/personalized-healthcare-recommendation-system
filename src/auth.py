@@ -18,6 +18,8 @@ import hashlib
 import secrets
 from datetime import datetime, timezone
 
+from sqlalchemy.exc import IntegrityError
+
 import db
 
 ROLES = ("Admin", "User")
@@ -35,14 +37,17 @@ def _seed_admin() -> None:
     """Create the default admin account if it doesn't exist yet."""
     if db.get_user("admin") is None:
         salt = secrets.token_hex(8)
-        db.insert_user(
-            username="admin",
-            name="Administrator",
-            salt=salt,
-            password_hash=_hash("admin123", salt),
-            role="Admin",
-            created=_now(),
-        )
+        try:
+            db.insert_user(
+                username="admin",
+                name="Administrator",
+                salt=salt,
+                password_hash=_hash("admin123", salt),
+                role="Admin",
+                created=_now(),
+            )
+        except IntegrityError:
+            pass  # another concurrent request seeded it first — fine
 
 
 def register_user(username: str, name: str, password: str) -> tuple[bool, str]:
@@ -56,14 +61,19 @@ def register_user(username: str, name: str, password: str) -> tuple[bool, str]:
     if db.get_user(username) is not None:
         return False, "Username already exists."
     salt = secrets.token_hex(8)
-    db.insert_user(
-        username=username,
-        name=name.strip() or username,
-        salt=salt,
-        password_hash=_hash(password, salt),
-        role="User",
-        created=_now(),
-    )
+    try:
+        db.insert_user(
+            username=username,
+            name=name.strip() or username,
+            salt=salt,
+            password_hash=_hash(password, salt),
+            role="User",
+            created=_now(),
+        )
+    except IntegrityError:
+        # Race safety: two simultaneous signups can both pass the pre-check;
+        # the PRIMARY KEY constraint is the final arbiter of uniqueness.
+        return False, "Username already exists."
     return True, "Account created — you can log in now."
 
 
