@@ -6,6 +6,7 @@ matplotlib
 seaborn
 plotly
 streamlit
+streamlit-cookies-controller
 joblib
 networkx
 sqlalchemy

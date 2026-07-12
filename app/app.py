@@ -34,7 +34,6 @@ import jwt
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 from datetime import datetime, timedelta, timezone
 
 # Streamlit Cloud provides secrets via st.secrets — bridge DATABASE_URL to the
@@ -235,13 +234,20 @@ def _bar(x, y, title, color=ACCENT, height=300, xaxis="", horizontal=True):
 # Persistent login ("remember me" cookie)
 #
 # Streamlit session state dies on every page refresh, so we keep a signed
-# JWT in a browser cookie: set on login, read back (st.context.cookies) to
-# restore the session, deleted on logout. The signature (HS256) makes the
-# cookie tamper-proof; set API_JWT_SECRET in production.
+# JWT in a browser cookie: set on login, read back to restore the session,
+# deleted on logout. The cookie is read/written CLIENT-SIDE via a component
+# (streamlit-cookies-controller) because Streamlit Cloud's proxy strips
+# unknown cookies from requests — server-side reads (st.context.cookies)
+# never see them. The HS256 signature makes the cookie tamper-proof; set
+# API_JWT_SECRET in production.
 # =========================================================================== #
+from streamlit_cookies_controller import CookieController  # noqa: E402
+
 _COOKIE = "hc_auth"
 _COOKIE_SECRET = os.environ.get("API_JWT_SECRET", "dev-secret-change-in-production")
 _COOKIE_DAYS = 7
+
+_cookies = CookieController()
 
 
 def _issue_login_token(user: dict) -> str:
@@ -257,20 +263,18 @@ def _issue_login_token(user: dict) -> str:
     )
 
 
-def _write_cookie_js(value: str, max_age: int) -> None:
-    """Set/delete the auth cookie from a zero-height component iframe."""
-    components.html(
-        f"""<script>
-        const secure = window.parent.location.protocol === 'https:' ? '; Secure' : '';
-        window.parent.document.cookie =
-            "{_COOKIE}={value}; path=/; max-age={max_age}; SameSite=Lax" + secure;
-        </script>""",
-        height=0,
+def _write_login_cookie(user: dict) -> None:
+    _cookies.set(
+        _COOKIE,
+        _issue_login_token(user),
+        max_age=_COOKIE_DAYS * 24 * 3600,
+        path="/",
+        same_site="lax",
     )
 
 
 def _restore_from_cookie() -> dict | None:
-    token = st.context.cookies.get(_COOKIE)
+    token = _cookies.get(_COOKIE)
     if not token:
         return None
     try:
@@ -299,7 +303,10 @@ if st.session_state.user is None and not st.session_state.get("just_logged_out")
 
 if st.session_state.user is None:
     if st.session_state.pop("just_logged_out", False):
-        _write_cookie_js("", 0)  # delete the cookie client-side
+        try:
+            _cookies.remove(_COOKIE)
+        except Exception:
+            pass  # cookie already gone
     st.markdown('<p class="main-title">🩺 Personalized Healthcare & Medicine Recommendation System</p>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">ML-powered disease prediction, medicine recommendations, risk screening & review-sentiment analytics.</p>', unsafe_allow_html=True)
     st.write("")
@@ -372,7 +379,7 @@ if st.session_state.user is None:
 user = st.session_state.user
 
 # Refresh the remember-me cookie on every logged-in render (sliding expiry).
-_write_cookie_js(_issue_login_token(user), _COOKIE_DAYS * 24 * 3600)
+_write_login_cookie(user)
 
 # =========================================================================== #
 # Sidebar (logged in)
