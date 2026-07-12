@@ -178,7 +178,7 @@ export DATABASE_URL="postgresql://user:pass@host:5432/dbname"
 streamlit run app/app.py          # or uvicorn api.main:app
 ```
 
-Free hosted options: [Neon](https://neon.tech) or [Supabase](https://supabase.com) — create a project, copy its connection string. On Streamlit Cloud, add `DATABASE_URL` in the app's **Secrets** instead (the app bridges `st.secrets` → env automatically). The full E2E suite passes identically on both backends.
+Free hosted options: [Neon](https://neon.tech) or [Supabase](https://supabase.com) — create a project, copy its connection string. On Streamlit Cloud, add `DATABASE_URL` in the app's **Secrets** instead (the app bridges `st.secrets` → env automatically). The full E2E suite passes identically on both backends — **the live demo runs on a hosted Neon PostgreSQL**, so accounts and feedback persist across restarts.
 
 ---
 
@@ -204,7 +204,7 @@ Free hosted options: [Neon](https://neon.tech) or [Supabase](https://supabase.co
 
 ## 🔮 Future enhancements
 
-- **Managed cloud database in production** — PostgreSQL support is built in (set `DATABASE_URL`, verified end-to-end); what remains is provisioning a managed instance with backups/monitoring for a real deployment.
+- **Database HA & observability** — the live app runs on a managed PostgreSQL (Neon) via `DATABASE_URL`; production hardening would add backups, monitoring and connection retry policies.
 - **Larger, real-world clinical datasets** — the current datasets are educational; production would need clinically validated data and re-evaluation.
 - **Contextual bandits on live traffic** — the Thompson-sampling bandit adapts to feedback today; real deployments would add user-context features and off-policy evaluation.
 - **Collaborative filtering (user–item SVD)** — needs per-user interaction history at scale; the current crowd signal comes from 200K+ drug reviews.
