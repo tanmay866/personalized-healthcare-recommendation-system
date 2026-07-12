@@ -1,26 +1,40 @@
+<div align="center">
+
 # 🩺 Personalized Healthcare & Medicine Recommendation System
 
-**🔴 Live demo: [personalized-healthcare-recommendation-system.streamlit.app](https://personalized-healthcare-recommendation-system.streamlit.app)** — sign up for a free account and try it.
+**An end-to-end machine-learning platform** — predicts diseases from symptoms, recommends medicines with real-world evidence, screens health risk with models trained on real clinical data, and learns from user feedback.
 
-A machine-learning system that predicts a likely **disease from a patient's symptoms**, recommends **medicines, precautions, diet, lifestyle changes, and the right specialist**, and provides a **personalized health-risk screening** from patient vitals.
+[![Live Demo](https://img.shields.io/badge/🔴_Live_Demo-Try_it_now-FF4B4B?style=for-the-badge)](https://personalized-healthcare-recommendation-system.streamlit.app)
 
-> Built as a Data Science / ML internship project for **Zidio Development**.
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?logo=scikitlearn&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-Keras-FF6F00?logo=tensorflow&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-FF4B4B?logo=streamlit&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-REST_+_JWT-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon-4169E1?logo=postgresql&logoColor=white)
+
+*5 ML models · 3 real-world datasets · NLP on 215K reviews · knowledge graph · reinforcement learning · 48 automated tests*
+
+</div>
 
 ---
 
-## ✨ Features
+## 🎯 What it does
 
-| # | Feature | What it does |
-|---|---------|--------------|
-| 1 | **User Management** | Signup/login with salted-hash passwords in a real database — **SQLite by default, PostgreSQL via one `DATABASE_URL` env var** (SQLAlchemy Core) — Admin/User roles, per-user health profiles that prefill the risk form. |
-| 2 | **Disease Prediction** | Enter your symptoms → ML model predicts the most likely disease (with confidence & top-3 alternatives). |
-| 3 | **Care Recommendations** | For the predicted disease: medicines, precautions, diet, workout/lifestyle tips, and which specialist to consult. |
-| 4 | **Content-Based Filtering** | "Related diseases" via cosine similarity between disease symptom profiles. |
-| 4b | **Knowledge-Graph Recommendations** | A 307-node medical graph (diseases ↔ symptoms ↔ medications ↔ specialists); **Personalized PageRank** finds related diseases through multi-hop paths, with an interactive network visualization. |
-| 5 | **Adaptive Medicine Ranking (RL)** | Real medicines start at a hybrid score (60% NLP review sentiment + 40% star rating, 200K+ reviews) and **adapt to 👍/👎 user feedback via a Thompson-sampling bandit** — Beta posteriors per (disease, medicine) arm. |
-| 6 | **Health Risk Screening** | Symptoms + vitals → likelihood of a positive diagnosis, **plus disease-specific risk calculators trained on real clinical data**: ❤️ heart disease (UCI Cleveland, AUC 0.95) and 🩸 diabetes (Pima Indians, AUC 0.81). |
-| 7 | **Sentiment Explorer (NLP)** | Per-condition drug sentiment rankings + a live review analyzer powered by the trained NLP model. |
-| 8 | **Analytics Dashboard** | Usage trends, disease popularity rankings, model performance comparison, dataset insights; admins see all user activity. |
+Enter your symptoms → the system tells you the **likely disease**, what **medicines real patients rate highest** for it, which **precautions and diet** to follow, and which **specialist** to consult. Separately, calculators trained on **real clinical data** estimate your heart-disease and diabetes risk. Every recommendation improves as users give 👍/👎 feedback.
+
+| Capability | How |
+|---|---|
+| 🔬 **Disease prediction** | 132 symptoms → 41 diseases, RandomForest, top-3 with confidence |
+| 💊 **Care recommendations** | Curated knowledge base: medicines, precautions, diet, lifestyle, specialist |
+| 🏆 **Evidence-ranked medicines** | NLP sentiment over **215K real drug reviews** + star ratings (hybrid score) |
+| 🎰 **Learns from feedback (RL)** | Thompson-sampling bandit re-ranks medicines as users vote 👍/👎 |
+| 🕸 **Knowledge-graph discovery** | 307-node medical graph; Personalized PageRank finds related diseases via multi-hop paths |
+| ❤️🩸 **Clinical risk calculators** | Trained on **real patients**: UCI Cleveland heart (AUC 0.95), Pima diabetes (AUC 0.81) |
+| 💬 **Sentiment explorer** | Per-condition drug rankings + live review analyzer (try your own text) |
+| 📈 **Analytics dashboard** | Usage trends, disease popularity, model metrics; admin sees all activity |
+| 🔐 **Real user management** | Salted-hash auth, roles, health profiles, persistent login, SQLite→PostgreSQL via one env var |
+| 🔌 **REST API** | FastAPI + JWT, 13 endpoints, auto-generated Swagger docs |
 
 ---
 
@@ -35,114 +49,90 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 
 ---
 
-## 🧠 How it works — three models
+## 🏗️ Architecture
 
-This project deliberately uses **two complementary models**, each backed by a suitable dataset:
-
-### Model 1 — Symptom → Disease Predictor
-- **Dataset:** 4,920 records · 132 symptoms · 41 diseases (perfectly balanced).
-- **Approach:** symptoms encoded as a 132-dim binary vector → multi-class classification.
-- **Models compared:** Random Forest, SVM, Naive Bayes, XGBoost, and a **neural network** (MLP with 128→64 hidden layers) — 5-fold stratified CV.
-- **Deep learning comparison:** a **TensorFlow/Keras** model (symptom-token `Embedding(32) → GlobalAvgPool → Dense(128) → Dense(64) → softmax`, `src/train_deep.py`) also reaches 100% — the deployed app keeps RandomForest (equal accuracy, no 500MB TF dependency).
-- **Result:** **100% test accuracy** (Random Forest selected).
-- Also produces the **content-based filtering** artifact: cosine similarity between per-disease mean symptom vectors → "related diseases".
-  - *Note:* this dataset is cleanly separable — every disease maps to a consistent symptom signature — so near-perfect accuracy is expected and is a property of the data, not overfitting. The engineering value here is the **complete, deployed end-to-end system**, not beating a hard benchmark.
-
-### Model 2 — Personalized Risk / Outcome Screening
-- **Dataset:** patient-profile data (symptoms + age, gender, blood pressure, cholesterol).
-- **Target:** `outcome_variable` (Positive / Negative diagnosis).
-  - We tested predicting `risk_level` (Low/Med/High) but it carries **no learnable signal** (models sit at the majority-class baseline), so we transparently pivoted to `outcome_variable`, which does.
-- **Models compared:** Random Forest, Gradient Boosting, Logistic Regression, MLP — plus a **GridSearchCV tuning pass** on the winner.
-- **Result:** **80% test accuracy** vs a **52% majority-class baseline** (tuned Random Forest) — a genuine, honest improvement.
-- **Probability calibration:** the app surfaces raw probabilities, so we evaluated sigmoid and isotonic calibration against the raw model (Brier score / reliability curves — see `02_modeling.ipynb`). The raw model was already well calibrated (Brier 0.14); calibrated variants traded accuracy for negligible gains, so we kept it — with the analysis documented.
-
-### Models 2b — Clinical Risk Calculators (real patient data)
-- **Heart disease:** UCI Cleveland dataset — **303 real patients**, 13 clinical features (chest pain type, ST depression, fluoroscopy vessels…). Logistic Regression selected by CV ROC-AUC: **test AUC 0.95, 87% accuracy** vs 54% baseline.
-- **Diabetes:** Pima Indians dataset — **768 real patients** (glucose, BMI, insulin, pedigree…). Logistic Regression: **test AUC 0.81, 71% accuracy** vs 65% baseline.
-- Real-data handling: Cleveland's missing `ca`/`thal` values and Pima's **zeros-as-hidden-missing** (374 impossible insulin readings) are median-imputed *inside* the sklearn Pipeline, so inference tolerates missing inputs too.
-- Notable: **Logistic Regression beat Random Forest and Gradient Boosting on both** — the classic result on small clinical datasets, where simpler models generalize better.
-
-### Model 3 — Drug-Review Sentiment (NLP)
-- **Dataset:** UCI Drug Review dataset (drugs.com) — **215K patient reviews**, 3,400+ drugs, 800+ conditions. *(Not committed — 112 MB; `src/train_sentiment.py` documents the download. A 5K sample ships in `data/processed/` for exploration.)*
-- **Approach:** ratings → binary sentiment labels (≥7 positive, ≤4 negative); **TF-IDF (uni+bi-grams, 50K features) → Logistic Regression**.
-- **Result:** **90% test accuracy, 0.93 F1** on ~49K held-out reviews.
-- **Usage:** every review is scored by the model, then aggregated per (drug, condition) into `data/processed/drug_sentiment.csv`. The app uses this to rank **real medicines by patient satisfaction** for 26 of the 41 predictable diseases, and offers a sentiment explorer + live review analyzer.
-
-> **Honesty note:** rather than force one weak dataset to do everything, each model is matched to a dataset that can actually support it. Recognizing and documenting this trade-off is part of the project.
-
----
-
-## 🗂️ Project structure
-
-```
-personalized-healthcare-recommendation-system/
-├── app/
-│   └── app.py                  # Streamlit web app (3 tabs)
-├── data/
-│   ├── raw/                    # source datasets
-│   │   ├── disease_symptoms.csv
-│   │   └── patient_profile.csv
-│   └── processed/
-│       ├── knowledge_base.csv  # 41 diseases → medicines/diet/precautions/…
-│       └── knowledge_base.json
-├── models/                     # trained models + metrics + artifacts
-├── notebooks/
-│   └── 01_eda.ipynb            # exploratory data analysis
-├── api/
-│   └── main.py                 # FastAPI REST backend (JWT auth)
-├── src/
-│   ├── preprocess.py           # data cleaning & feature engineering
-│   ├── train_disease.py        # disease model + similarity artifact
-│   ├── train_risk.py           # risk model (+ GridSearch tuning)
-│   ├── train_sentiment.py      # NLP sentiment model on drug reviews
-│   ├── train_deep.py           # TensorFlow/Keras comparison model
-│   ├── train_clinical.py       # heart + diabetes models (real clinical data)
-│   ├── clinical.py             # clinical risk inference + UI specs
-│   ├── build_knowledge_base.py # authors the recommendation KB
-│   ├── auth.py                 # users, roles, profiles, activity log
-│   ├── db.py                   # DB layer (SQLite/PostgreSQL via SQLAlchemy)
-│   ├── knowledge_graph.py      # medical knowledge graph + PageRank recs
-│   ├── bandit.py               # RL: Thompson-sampling feedback bandit
-│   └── recommend.py            # inference layer used by the app
-├── requirements.txt
-└── README.md
+```mermaid
+flowchart LR
+    U[👤 User] --> APP[Streamlit App<br/>auth · 5 tabs · cookies]
+    U2[🔧 API Client] --> API[FastAPI + JWT<br/>13 REST endpoints]
+    APP --> INF[Inference Layer]
+    API --> INF
+    INF --> M1[Disease Predictor<br/>RandomForest · 100%]
+    INF --> M2[Clinical Risk Models<br/>heart AUC 0.95 · diabetes AUC 0.81]
+    INF --> M3[NLP Sentiment<br/>TF-IDF + LogReg · 90%]
+    INF --> KG[Knowledge Graph<br/>307 nodes · PageRank]
+    INF --> RL[RL Bandit<br/>Thompson sampling]
+    INF --> KB[(Knowledge Base<br/>41 diseases)]
+    APP --> DB[(SQLite / PostgreSQL<br/>users · activity · feedback)]
+    API --> DB
+    RL --> DB
 ```
 
 ---
 
-## 🚀 Quickstart
+## 🧠 The models — and the reasoning behind them
+
+### 1 · Symptom → Disease Predictor
+4,920 records · 132 binary symptom features · 41 balanced classes. Compared RandomForest, SVM, Naive Bayes, XGBoost and an MLP neural network (5-fold stratified CV) — **100% test accuracy** (RandomForest deployed). A TensorFlow/Keras model (`Embedding → Dense(128) → Dense(64)`) matches it; the app ships RandomForest to avoid a 500 MB dependency for zero gain.
+
+> ⚖️ *This dataset is cleanly separable, so near-perfect accuracy is a property of the data — the engineering value is the complete deployed system, not the benchmark.*
+
+### 2 · Clinical Risk Calculators — real patient data
+- **❤️ Heart disease** — UCI Cleveland, **303 real patients**: Logistic Regression, **test AUC 0.95 · 87% accuracy** (54% baseline)
+- **🩸 Diabetes** — Pima Indians, **768 real patients**: Logistic Regression, **test AUC 0.81 · 71% accuracy** (65% baseline)
+- Real-data messiness handled inside the sklearn Pipeline: Cleveland's missing `ca`/`thal` values and Pima's zeros-as-hidden-missing (374 impossible insulin readings) are median-imputed — inference tolerates partial inputs too
+- **Logistic Regression beat RandomForest and GradientBoosting on both** — the classic small-clinical-data result
+
+### 3 · General Outcome Screening
+Symptoms + vitals → positive/negative outcome likelihood: tuned RandomForest, **80% test accuracy vs 52% baseline**. The original `risk_level` target proved statistically unlearnable (models stuck at the majority baseline) — verified and documented, then pivoted to the learnable target. Calibration was evaluated (Brier/reliability curves in `02_modeling.ipynb`); the raw model was already well-calibrated, so calibrated variants that traded accuracy for nothing were rejected.
+
+### 4 · Drug-Review Sentiment (NLP)
+**215K real reviews** from drugs.com → TF-IDF (uni+bigrams, 50K features) + Logistic Regression: **90% test accuracy, 0.93 F1** on ~49K held-out reviews. Every review is scored and aggregated per (drug, condition) to rank real medicines by patient satisfaction.
+
+### 5 · Recommendation intelligence
+- **Content-based:** cosine similarity between disease symptom profiles
+- **Graph-based:** Personalized PageRank over a 307-node medical knowledge graph — finds relations through shared specialists/medications that vector similarity can't see
+- **Reinforcement learning:** each (disease, medicine) pair is a bandit arm with a Beta posterior anchored at its offline hybrid score; 👍/👎 votes update the posterior and re-rank via Thompson sampling
+
+> 🧭 **Design principle:** every model is matched to a dataset that can actually support it, every metric is reported against its baseline, and negative results (unlearnable targets, rejected calibration) are documented rather than hidden.
+
+---
+
+## 📊 Results at a glance
+
+| Model | Data | Algorithm | Result | Baseline |
+|-------|------|-----------|--------|----------|
+| Disease predictor | 4,920 records · 41 classes | Random Forest | **100%** | 2.4% |
+| ❤️ Heart risk | 303 real patients | Logistic Regression | **AUC 0.95 · 87%** | 54% |
+| 🩸 Diabetes risk | 768 real patients | Logistic Regression | **AUC 0.81 · 71%** | 65% |
+| Outcome screening | symptoms + vitals | Random Forest (tuned) | **80%** | 52% |
+| Review sentiment | 215K drug reviews | TF-IDF + LogReg | **90% · F1 0.93** | 72% |
+| Deep learning (comparison) | 4,920 records | Keras Embedding+Dense | **100%** | 2.4% |
+
+**Quality assurance:** 29 API tests + 19 browser end-to-end tests (Playwright) covering login → prediction → feedback → dashboards → logout, verified on both SQLite and PostgreSQL backends.
+
+---
+
+## 🚀 Run it locally
 
 ```bash
-# 1. Clone and enter the project
+git clone https://github.com/tanmay866/personalized-healthcare-recommendation-system.git
 cd personalized-healthcare-recommendation-system
 
-# 2. Create a virtual environment and install dependencies
 python3 -m venv venv
 source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 
-# 3. (Optional) Reproduce the models from scratch
-python src/build_knowledge_base.py
-python src/train_disease.py
-python src/train_risk.py
-
-# 4. Launch the app
-streamlit run app/app.py
+streamlit run app/app.py          # → http://localhost:8501
 ```
 
-Then open the local URL Streamlit prints (usually `http://localhost:8501`).
+Sign up for an account in the app. Trained models ship with the repo; retrain any of them with the scripts in `src/` (`train_disease.py`, `train_clinical.py`, `train_risk.py`, `train_sentiment.py`).
 
-**Login:** create your own account via *Sign up*. An admin account (sees all-user activity in the Analytics Dashboard) is seeded automatically; its password comes from the `ADMIN_PASSWORD` environment variable / Streamlit secret.
-
----
-
-## 🔌 REST API (FastAPI + JWT)
-
-The system is also exposed as a standalone REST service with JWT authentication:
+<details>
+<summary><b>🔌 REST API (FastAPI + JWT)</b></summary>
 
 ```bash
-uvicorn api.main:app --port 8000
-# interactive docs: http://localhost:8000/docs
+uvicorn api.main:app --port 8000    # interactive docs at /docs
 ```
 
 | Method | Endpoint | Auth | Purpose |
@@ -150,79 +140,97 @@ uvicorn api.main:app --port 8000
 | POST | `/auth/signup` | — | Create an account |
 | POST | `/auth/login` | — | Get a JWT access token (24h) |
 | GET | `/symptoms` | — | The 132 symptoms the model understands |
-| POST | `/predict/disease` | JWT | Symptoms → disease + recommendations + related diseases + top real medicines |
+| POST | `/predict/disease` | JWT | Symptoms → disease + recommendations + related + medicines |
 | POST | `/predict/risk` | JWT | Vitals → outcome likelihood |
-| GET | `/recommend/{disease}` | JWT | Knowledge-base entry for a disease |
-| GET | `/sentiment/{condition}` | JWT | Top drugs for a condition by review sentiment |
-| GET | `/graph/{disease}` | JWT | Knowledge-graph neighborhood + graph-walk related diseases |
-| GET | `/medicines/{disease}` | JWT | Adaptive (bandit-ranked) medicine recommendations |
-| POST | `/predict/clinical/{heart\|diabetes}` | JWT | Disease-specific risk from real-clinical-data models |
-| POST | `/feedback` | JWT | 👍/👎 medicine feedback — trains the RL bandit |
-| GET | `/admin/users` | JWT (Admin) | List users — role-based access control |
+| POST | `/predict/clinical/{heart\|diabetes}` | JWT | Risk from real-clinical-data models |
+| GET | `/recommend/{disease}` | JWT | Knowledge-base entry |
+| GET | `/sentiment/{condition}` | JWT | Top drugs by review sentiment |
+| GET | `/graph/{disease}` | JWT | Knowledge-graph neighborhood + related diseases |
+| GET | `/medicines/{disease}` | JWT | Bandit-ranked medicine recommendations |
+| POST | `/feedback` | JWT | 👍/👎 feedback — trains the RL bandit |
+| GET | `/admin/users` | JWT · Admin | Role-guarded user list |
 | GET | `/health` | — | Liveness probe |
-
-Example:
 
 ```bash
 TOKEN=$(curl -s -X POST localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"<your-username>","password":"<your-password>"}' | jq -r .access_token)
+  -d '{"username":"<user>","password":"<pass>"}' | jq -r .access_token)
 
 curl -X POST localhost:8000/predict/disease \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"symptoms":["continuous_sneezing","chills","watering_from_eyes"]}'
 ```
+</details>
 
-Set `API_JWT_SECRET` in production (a dev fallback is used otherwise).
+<details>
+<summary><b>🗄️ Database: SQLite → PostgreSQL with one variable</b></summary>
 
-### Database backends
+Storage uses SQLAlchemy Core, so the same code runs on both backends:
 
-Storage uses SQLAlchemy Core, so the same code runs on:
+- **SQLite** (default, zero setup) — `data/app.db`, created automatically
+- **PostgreSQL** — `export DATABASE_URL="postgresql://user:pass@host:5432/db"` — no code changes
 
-- **SQLite** (default, zero setup): `data/app.db`, created automatically.
-- **PostgreSQL** (hosted or local): set one variable — no code changes.
+The live demo runs on a hosted **Neon PostgreSQL**, so accounts, history and feedback persist across restarts. On Streamlit Cloud, set `DATABASE_URL` in the app Secrets (auto-bridged to the environment).
 
-```bash
-export DATABASE_URL="postgresql://user:pass@host:5432/dbname"
-streamlit run app/app.py          # or uvicorn api.main:app
+Production secrets: `DATABASE_URL` · `ADMIN_PASSWORD` · `API_JWT_SECRET`.
+</details>
+
+<details>
+<summary><b>🗂️ Project structure</b></summary>
+
 ```
-
-Free hosted options: [Neon](https://neon.tech) or [Supabase](https://supabase.com) — create a project, copy its connection string. On Streamlit Cloud, add `DATABASE_URL` in the app's **Secrets** instead (the app bridges `st.secrets` → env automatically). The full E2E suite passes identically on both backends — **the live demo runs on a hosted Neon PostgreSQL**, so accounts and feedback persist across restarts.
+├── app/app.py                  # Streamlit app (5 tabs, auth, persistent login)
+├── api/main.py                 # FastAPI REST backend (JWT)
+├── src/
+│   ├── preprocess.py           # data cleaning & feature engineering
+│   ├── train_disease.py        # disease model + similarity artifact
+│   ├── train_clinical.py       # heart + diabetes (real clinical data)
+│   ├── train_risk.py           # outcome screening (+ tuning, calibration)
+│   ├── train_sentiment.py      # NLP sentiment on 215K drug reviews
+│   ├── train_deep.py           # TensorFlow/Keras comparison
+│   ├── build_knowledge_base.py # 41-disease recommendation KB
+│   ├── knowledge_graph.py      # medical graph + PageRank
+│   ├── bandit.py               # RL: Thompson-sampling feedback bandit
+│   ├── clinical.py             # clinical risk inference + UI specs
+│   ├── recommend.py            # inference layer
+│   ├── auth.py                 # users, roles, profiles, activity
+│   └── db.py                   # SQLite/PostgreSQL via SQLAlchemy Core
+├── data/                       # datasets (raw + processed KB/sentiment)
+├── models/                     # trained models, metrics, artifacts
+├── notebooks/                  # 01_eda · 02_modeling (executed, with charts)
+└── docs/screenshots/
+```
+</details>
 
 ---
 
 ## 🛠️ Tech stack
 
-- **Python** · pandas · NumPy
-- **scikit-learn** · **XGBoost** (modeling) · **TF-IDF NLP** (sentiment)
-- **Streamlit** (web app) · **Plotly** (charts)
-- **joblib** (model persistence)
+`Python 3.11` · `pandas` · `scikit-learn` · `XGBoost` · `TensorFlow/Keras` · `NetworkX` · `Streamlit` · `Plotly` · `FastAPI` · `PyJWT` · `SQLAlchemy` · `PostgreSQL (Neon)` · `Playwright` (testing)
+
+**Datasets:** [Disease–Symptom](https://github.com/anujdutt9/Disease-Prediction-from-Symptoms) · [UCI Cleveland Heart Disease](https://archive.ics.uci.edu/dataset/45/heart+disease) · [Pima Indians Diabetes](https://archive.ics.uci.edu/dataset/34/diabetes) · [UCI Drug Reviews (drugs.com)](https://archive.ics.uci.edu/dataset/462/drug+review+dataset+drugs+com)
 
 ---
 
-## 📊 Results summary
+## 🔮 Roadmap
 
-| Model | Task | Best algorithm | Accuracy | Baseline |
-|-------|------|----------------|----------|----------|
-| Disease predictor | 41-class symptom → disease | Random Forest | **100%** | 2.4% (random) |
-| Risk screener | Positive/Negative outcome | Random Forest | **~77%** | 52% (majority) |
-| Review sentiment (NLP) | Positive/Negative review | TF-IDF + Logistic Regression | **90%** (F1 0.93) | 72% (majority) |
-| Deep learning (comparison) | 41-class symptom → disease | Keras Embedding + Dense | **100%** | 2.4% (random) |
-| ❤️ Heart risk (real data) | CAD present/absent | Logistic Regression | **87%** (AUC 0.95) | 54% (majority) |
-| 🩸 Diabetes risk (real data) | Diabetes yes/no | Logistic Regression | **71%** (AUC 0.81) | 65% (majority) |
+- Research-grade diagnosis data (DDXPlus, 1.3M synthetic-clinical patients) for the symptom→disease model
+- Contextual bandits + off-policy evaluation on live traffic
+- Collaborative filtering (user–item SVD) once per-user interaction history accumulates
+- Database backups/monitoring and PyTorch model variants
 
 ---
 
-## 🔮 Future enhancements
+## 👨‍💻 Author
 
-- **Database HA & observability** — the live app runs on a managed PostgreSQL (Neon) via `DATABASE_URL`; production hardening would add backups, monitoring and connection retry policies.
-- **Larger clinical datasets** — real patient data now powers the heart and diabetes calculators (UCI Cleveland, Pima); the symptom→disease model still uses an educational dataset, and upgrading it to a research-grade source like DDXPlus (1.3M synthetic-clinical patients) remains future work.
-- **Contextual bandits on live traffic** — the Thompson-sampling bandit adapts to feedback today; real deployments would add user-context features and off-policy evaluation.
-- **Collaborative filtering (user–item SVD)** — needs per-user interaction history at scale; the current crowd signal comes from 200K+ drug reviews.
-- **PyTorch model variants** and larger architectures on richer data.
+**Tanmay Patel** — designed and built end-to-end: data analysis, model training, recommendation engine, web app, REST API, database and deployment.
+
+[![GitHub](https://img.shields.io/badge/GitHub-tanmay866-181717?logo=github)](https://github.com/tanmay866)
+
+© 2026 Tanmay Patel · All rights reserved
 
 ---
 
 ## ⚠️ Disclaimer
 
-This project is for **educational and demonstration purposes only**. It is **not** a medical device and must **not** be used for real diagnosis or treatment. Medication references are general drug *classes*, not prescriptions. Always consult a qualified healthcare professional.
+This project is for **educational and demonstration purposes only**. It is **not** a medical device and must not be used for real diagnosis or treatment. Medication references are general drug classes, not prescriptions. Always consult a qualified healthcare professional.
