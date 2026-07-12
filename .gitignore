@@ -21,3 +21,7 @@ data/user_activity.json
 # Local agent tooling (symlinks into venv)
 .agents/
 .claude/
+
+# Project report — local only, not for the public repo
+docs/Project_Report.pdf
+docs/report/
