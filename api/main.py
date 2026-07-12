@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from auth import list_users, log_event, register_user, verify_user  # noqa: E402
+from bandit import rank_medicines, record_feedback  # noqa: E402
 from knowledge_graph import ego_graph_data, graph_related_diseases, graph_stats  # noqa: E402
 from recommend import (  # noqa: E402
     condition_sentiment,
@@ -86,6 +87,12 @@ class DiseaseRequest(BaseModel):
         ..., examples=[["itching", "skin_rash", "nodal_skin_eruptions"]]
     )
     top_k: int = Field(3, ge=1, le=10)
+
+
+class FeedbackRequest(BaseModel):
+    disease: str = Field(..., examples=["Migraine"])
+    drug: str = Field(..., examples=["Amerge"])
+    vote: int = Field(..., description="+1 helpful, -1 not helpful", ge=-1, le=1)
 
 
 class RiskRequest(BaseModel):
@@ -222,6 +229,30 @@ def sentiment_ep(condition: str, user: dict = Depends(current_user)):
 @app.get("/sentiment", tags=["ml"])
 def sentiment_conditions_ep(user: dict = Depends(current_user)):
     return {"conditions": list_sentiment_conditions()}
+
+
+@app.post("/feedback", status_code=201, tags=["ml"])
+def feedback_ep(body: FeedbackRequest, user: dict = Depends(current_user)):
+    """Record 👍/👎 medicine feedback — trains the Thompson-sampling bandit."""
+    if body.vote == 0:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "vote must be +1 or -1")
+    record_feedback(user["username"], body.disease, body.drug, body.vote)
+    log_event(user["username"], "feedback", {
+        "disease": body.disease, "drug": body.drug, "vote": body.vote, "via": "api",
+    })
+    return {"message": "Feedback recorded — ranking will adapt."}
+
+
+@app.get("/medicines/{disease}", tags=["ml"])
+def medicines_ep(disease: str, user: dict = Depends(current_user)):
+    """Adaptive (bandit-ranked) real-medicine recommendations for a disease."""
+    sent = get_drug_sentiment(disease, top_n=8)
+    if sent is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"No sentiment-ranked medicines for '{disease}'"
+        )
+    ranked = rank_medicines(disease, sent)
+    return {"disease": disease, "medicines": ranked.to_dict(orient="records")}
 
 
 @app.get("/graph/{disease}", tags=["ml"])

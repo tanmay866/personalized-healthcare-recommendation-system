@@ -47,6 +47,7 @@ from auth import (  # noqa: E402
     update_profile,
     verify_user,
 )
+from bandit import rank_medicines, record_feedback  # noqa: E402
 from knowledge_graph import ego_graph_data, graph_related_diseases  # noqa: E402
 from recommend import (  # noqa: E402
     condition_sentiment,
@@ -358,14 +359,22 @@ with tab1:
     if st.button("🔍 Predict Disease", type="primary", width="stretch"):
         if len(chosen) == 0:
             st.warning("Please select at least one symptom.")
+            st.session_state.pop("prediction", None)
         else:
+            # Persist in session state so the results survive the reruns
+            # triggered by the feedback (👍/👎) buttons below.
             result = predict_disease(chosen, top_k=3)
-            disease = result["disease"]
-            conf = result["confidence"]
+            st.session_state.prediction = result
             log_event(
                 user["username"], "disease_prediction",
-                {"disease": disease, "confidence": conf, "n_symptoms": len(chosen)},
+                {"disease": result["disease"], "confidence": result["confidence"],
+                 "n_symptoms": len(chosen)},
             )
+
+    result = st.session_state.get("prediction")
+    if result:
+            disease = result["disease"]
+            conf = result["confidence"]
 
             c1, c2 = st.columns([1, 1])
             with c1:
@@ -415,39 +424,51 @@ with tab1:
             with rc2:
                 _rec_card("🛡️ Precautions", rec.get("precautions"))
 
-            # Hybrid ranking of real medicines: NLP sentiment + star ratings.
+            # Adaptive medicine ranking: hybrid score prior + RL from feedback.
             sent = get_drug_sentiment(disease, top_n=8)
             if sent is not None:
+                ranked = rank_medicines(disease, sent)
                 st.divider()
-                st.subheader("💬 Top-Rated Real Medicines (hybrid ranking)")
+                st.subheader("💬 Top-Rated Real Medicines (adaptive ranking)")
                 st.caption(
-                    f"Hybrid score = 60% NLP review sentiment + 40% star rating, from 200K+ "
-                    f"real patient reviews (drugs.com), for: {', '.join(sentiment_conditions_for(disease))}."
+                    "Starts from a hybrid score (60% NLP review sentiment + 40% star "
+                    "rating, 200K+ drugs.com reviews) and **adapts with your 👍/👎 "
+                    "feedback** via a Thompson-sampling bandit — every vote updates "
+                    f"the Beta posterior. Conditions: {', '.join(sentiment_conditions_for(disease))}."
                 )
-                sc1, sc2 = st.columns([1, 1])
+                sc1, sc2 = st.columns([1.25, 1])
                 with sc1:
-                    show = sent.rename(
-                        columns={
-                            "drugName": "Medicine", "condition": "Condition",
-                            "n_reviews": "Reviews", "avg_rating": "Avg rating (/10)",
-                            "sentiment_score": "Sentiment", "hybrid_score": "Hybrid score",
-                        }
-                    )[["Medicine", "Condition", "Reviews", "Avg rating (/10)", "Sentiment", "Hybrid score"]]
-                    st.dataframe(show, width="stretch", hide_index=True)
+                    hc = st.columns([3.2, 1.4, 1.1, 0.6, 0.6])
+                    for h, txt in zip(hc, ["**Medicine**", "**Score**", "**Votes**", "", ""]):
+                        h.markdown(txt)
+                    for _, row in ranked.iterrows():
+                        drug = row["drugName"]
+                        rc = st.columns([3.2, 1.4, 1.1, 0.6, 0.6])
+                        rc[0].markdown(drug)
+                        rc[1].markdown(f"{row['posterior_mean']*100:.0f}%")
+                        rc[2].markdown(f"👍{int(row['ups'])} 👎{int(row['downs'])}")
+                        if rc[3].button("👍", key=f"up_{disease}_{drug}"):
+                            record_feedback(user["username"], disease, drug, 1)
+                            log_event(user["username"], "feedback", {"disease": disease, "drug": drug, "vote": 1})
+                            st.rerun()
+                        if rc[4].button("👎", key=f"down_{disease}_{drug}"):
+                            record_feedback(user["username"], disease, drug, -1)
+                            log_event(user["username"], "feedback", {"disease": disease, "drug": drug, "vote": -1})
+                            st.rerun()
                 with sc2:
                     sfig = go.Figure(
                         go.Bar(
-                            x=(sent["hybrid_score"] * 100)[::-1],
-                            y=sent["drugName"][::-1],
+                            x=(ranked["posterior_mean"] * 100)[::-1],
+                            y=ranked["drugName"][::-1],
                             orientation="h",
                             marker_color="#10b981",
-                            text=[f"{v*100:.0f}" for v in sent["hybrid_score"]][::-1],
+                            text=[f"{v*100:.0f}" for v in ranked["posterior_mean"]][::-1],
                             textposition="auto",
                         )
                     )
                     sfig.update_layout(
-                        title="Hybrid score (0–100)", height=320,
-                        margin=dict(l=10, r=10, t=40, b=10), xaxis_title="Score",
+                        title="Adaptive helpfulness score (0–100)", height=340,
+                        margin=dict(l=10, r=10, t=40, b=10), xaxis_title="Posterior mean",
                     )
                     st.plotly_chart(sfig, width="stretch")
 

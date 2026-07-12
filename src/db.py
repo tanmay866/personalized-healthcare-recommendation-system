@@ -43,6 +43,17 @@ CREATE TABLE IF NOT EXISTS activity (
 
 CREATE INDEX IF NOT EXISTS idx_activity_user ON activity(username);
 CREATE INDEX IF NOT EXISTS idx_activity_ts   ON activity(ts);
+
+CREATE TABLE IF NOT EXISTS feedback (
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    disease  TEXT NOT NULL,
+    drug     TEXT NOT NULL,
+    vote     INTEGER NOT NULL CHECK (vote IN (-1, 1)),
+    ts       TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_feedback_arm ON feedback(disease, drug);
 """
 
 
@@ -107,6 +118,30 @@ def insert_event(username: str, event_type: str, detail: dict, ts: str) -> None:
             "INSERT INTO activity (username, type, detail_json, ts) VALUES (?, ?, ?, ?)",
             (username, event_type, json.dumps(detail), ts),
         )
+
+
+# --------------------------------------------------------------------------- #
+# Recommendation feedback (powers the RL bandit)
+# --------------------------------------------------------------------------- #
+def insert_feedback(username: str, disease: str, drug: str, vote: int, ts: str) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "INSERT INTO feedback (username, disease, drug, vote, ts) VALUES (?, ?, ?, ?, ?)",
+            (username, disease, drug, vote, ts),
+        )
+
+
+def feedback_counts(disease: str) -> dict[str, tuple[int, int]]:
+    """Per-drug (upvotes, downvotes) for a disease."""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT drug, "
+            "SUM(CASE WHEN vote = 1 THEN 1 ELSE 0 END) AS ups, "
+            "SUM(CASE WHEN vote = -1 THEN 1 ELSE 0 END) AS downs "
+            "FROM feedback WHERE disease = ? GROUP BY drug",
+            (disease,),
+        ).fetchall()
+    return {r["drug"]: (int(r["ups"]), int(r["downs"])) for r in rows}
 
 
 def fetch_events(username: str | None = None, limit: int = 500) -> list[dict]:

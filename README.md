@@ -15,7 +15,7 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 | 3 | **Care Recommendations** | For the predicted disease: medicines, precautions, diet, workout/lifestyle tips, and which specialist to consult. |
 | 4 | **Content-Based Filtering** | "Related diseases" via cosine similarity between disease symptom profiles. |
 | 4b | **Knowledge-Graph Recommendations** | A 307-node medical graph (diseases ↔ symptoms ↔ medications ↔ specialists); **Personalized PageRank** finds related diseases through multi-hop paths, with an interactive network visualization. |
-| 5 | **Hybrid Medicine Ranking** | Real medicines ranked by a hybrid score: 60% NLP review sentiment (crowd signal) + 40% star rating (content signal), from 200K+ drugs.com reviews. |
+| 5 | **Adaptive Medicine Ranking (RL)** | Real medicines start at a hybrid score (60% NLP review sentiment + 40% star rating, 200K+ reviews) and **adapt to 👍/👎 user feedback via a Thompson-sampling bandit** — Beta posteriors per (disease, medicine) arm. |
 | 6 | **Health Risk Screening** | Symptoms + vitals (age, gender, blood pressure, cholesterol) → likelihood of a positive diagnosis. |
 | 7 | **Sentiment Explorer (NLP)** | Per-condition drug sentiment rankings + a live review analyzer powered by the trained NLP model. |
 | 8 | **Analytics Dashboard** | Usage trends, disease popularity rankings, model performance comparison, dataset insights; admins see all user activity. |
@@ -79,6 +79,7 @@ personalized-healthcare-recommendation-system/
 │   ├── auth.py                 # users, roles, profiles, activity log
 │   ├── db.py                   # SQLite storage layer (users + activity)
 │   ├── knowledge_graph.py      # medical knowledge graph + PageRank recs
+│   ├── bandit.py               # RL: Thompson-sampling feedback bandit
 │   └── recommend.py            # inference layer used by the app
 ├── requirements.txt
 └── README.md
@@ -131,6 +132,8 @@ uvicorn api.main:app --port 8000
 | GET | `/recommend/{disease}` | JWT | Knowledge-base entry for a disease |
 | GET | `/sentiment/{condition}` | JWT | Top drugs for a condition by review sentiment |
 | GET | `/graph/{disease}` | JWT | Knowledge-graph neighborhood + graph-walk related diseases |
+| GET | `/medicines/{disease}` | JWT | Adaptive (bandit-ranked) medicine recommendations |
+| POST | `/feedback` | JWT | 👍/👎 medicine feedback — trains the RL bandit |
 | GET | `/admin/users` | JWT (Admin) | List users — role-based access control |
 | GET | `/health` | — | Liveness probe |
 
@@ -173,7 +176,8 @@ Set `API_JWT_SECRET` in production (a dev fallback is used otherwise).
 
 - ~~REST API backend with JWT-token authentication~~ ✅ **Done** — see the REST API section above. Remaining: a hosted PostgreSQL database (current storage is SQLite through a plain-SQL layer, so the swap is a connection change, not a rewrite).
 - ~~Probability calibration~~ ✅ **Done** — Brier-score evaluation of sigmoid/isotonic calibration with reliability curves in `02_modeling.ipynb`. Remaining: larger, real-world clinical datasets.
-- ~~Graph-based recommendations~~ ✅ **Done** — medical knowledge graph with Personalized-PageRank related diseases (`src/knowledge_graph.py`) and an interactive network view in the app. Remaining: **reinforcement learning** from user feedback.
+- ~~Graph-based recommendations~~ ✅ **Done** — medical knowledge graph with Personalized-PageRank related diseases (`src/knowledge_graph.py`) and an interactive network view in the app.
+- ~~Reinforcement learning from user feedback~~ ✅ **Done** — Thompson-sampling bandit (`src/bandit.py`): 👍/👎 votes update Beta posteriors per (disease, medicine) arm and re-rank recommendations. Remaining: full contextual bandits / off-policy evaluation on real traffic.
 - TensorFlow/PyTorch deep-learning models (an sklearn MLP neural network is already included in the comparison).
 
 ---
