@@ -34,6 +34,15 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
+# Streamlit Cloud provides secrets via st.secrets — bridge DATABASE_URL to the
+# environment before the first db call (the engine is created lazily), so a
+# hosted PostgreSQL can be configured without code changes.
+try:
+    if "DATABASE_URL" in st.secrets:
+        os.environ.setdefault("DATABASE_URL", st.secrets["DATABASE_URL"])
+except Exception:
+    pass  # no secrets file — default SQLite
+
 # Make src/ importable regardless of where Streamlit is launched from.
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))

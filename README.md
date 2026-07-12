@@ -10,7 +10,7 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 
 | # | Feature | What it does |
 |---|---------|--------------|
-| 1 | **User Management** | Signup/login with salted-hash passwords stored in a **SQLite database**, Admin/User roles, and per-user health profiles that prefill the risk form. |
+| 1 | **User Management** | Signup/login with salted-hash passwords in a real database — **SQLite by default, PostgreSQL via one `DATABASE_URL` env var** (SQLAlchemy Core) — Admin/User roles, per-user health profiles that prefill the risk form. |
 | 2 | **Disease Prediction** | Enter your symptoms → ML model predicts the most likely disease (with confidence & top-3 alternatives). |
 | 3 | **Care Recommendations** | For the predicted disease: medicines, precautions, diet, workout/lifestyle tips, and which specialist to consult. |
 | 4 | **Content-Based Filtering** | "Related diseases" via cosine similarity between disease symptom profiles. |
@@ -79,7 +79,7 @@ personalized-healthcare-recommendation-system/
 │   ├── train_deep.py           # TensorFlow/Keras comparison model
 │   ├── build_knowledge_base.py # authors the recommendation KB
 │   ├── auth.py                 # users, roles, profiles, activity log
-│   ├── db.py                   # SQLite storage layer (users + activity)
+│   ├── db.py                   # DB layer (SQLite/PostgreSQL via SQLAlchemy)
 │   ├── knowledge_graph.py      # medical knowledge graph + PageRank recs
 │   ├── bandit.py               # RL: Thompson-sampling feedback bandit
 │   └── recommend.py            # inference layer used by the app
@@ -153,6 +153,20 @@ curl -X POST localhost:8000/predict/disease \
 
 Set `API_JWT_SECRET` in production (a dev fallback is used otherwise).
 
+### Database backends
+
+Storage uses SQLAlchemy Core, so the same code runs on:
+
+- **SQLite** (default, zero setup): `data/app.db`, created automatically.
+- **PostgreSQL** (hosted or local): set one variable — no code changes.
+
+```bash
+export DATABASE_URL="postgresql://user:pass@host:5432/dbname"
+streamlit run app/app.py          # or uvicorn api.main:app
+```
+
+Free hosted options: [Neon](https://neon.tech) or [Supabase](https://supabase.com) — create a project, copy its connection string. On Streamlit Cloud, add `DATABASE_URL` in the app's **Secrets** instead (the app bridges `st.secrets` → env automatically). The full E2E suite passes identically on both backends.
+
 ---
 
 ## 🛠️ Tech stack
@@ -177,7 +191,7 @@ Set `API_JWT_SECRET` in production (a dev fallback is used otherwise).
 
 ## 🔮 Future enhancements
 
-- **Hosted PostgreSQL** — storage is currently SQLite behind a plain-SQL layer (`src/db.py`), so the swap is a connection change, not a rewrite.
+- **Managed cloud database in production** — PostgreSQL support is built in (set `DATABASE_URL`, verified end-to-end); what remains is provisioning a managed instance with backups/monitoring for a real deployment.
 - **Larger, real-world clinical datasets** — the current datasets are educational; production would need clinically validated data and re-evaluation.
 - **Contextual bandits on live traffic** — the Thompson-sampling bandit adapts to feedback today; real deployments would add user-context features and off-policy evaluation.
 - **Collaborative filtering (user–item SVD)** — needs per-user interaction history at scale; the current crowd signal comes from 200K+ drug reviews.

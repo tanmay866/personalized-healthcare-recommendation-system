@@ -8,6 +8,8 @@ plotly
 streamlit
 joblib
 networkx
+sqlalchemy
+psycopg2-binary
 
 # REST API backend
 fastapi
