@@ -7,3 +7,8 @@ seaborn
 plotly
 streamlit
 joblib
+
+# REST API backend
+fastapi
+uvicorn
+pyjwt

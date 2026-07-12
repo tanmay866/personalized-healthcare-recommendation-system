@@ -66,6 +66,8 @@ personalized-healthcare-recommendation-system/
 ├── models/                     # trained models + metrics + artifacts
 ├── notebooks/
 │   └── 01_eda.ipynb            # exploratory data analysis
+├── api/
+│   └── main.py                 # FastAPI REST backend (JWT auth)
 ├── src/
 │   ├── preprocess.py           # data cleaning & feature engineering
 │   ├── train_disease.py        # disease model + similarity artifact
@@ -107,6 +109,43 @@ Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 
 ---
 
+## 🔌 REST API (FastAPI + JWT)
+
+The system is also exposed as a standalone REST service with JWT authentication:
+
+```bash
+uvicorn api.main:app --port 8000
+# interactive docs: http://localhost:8000/docs
+```
+
+| Method | Endpoint | Auth | Purpose |
+|--------|----------|------|---------|
+| POST | `/auth/signup` | — | Create an account |
+| POST | `/auth/login` | — | Get a JWT access token (24h) |
+| GET | `/symptoms` | — | The 132 symptoms the model understands |
+| POST | `/predict/disease` | JWT | Symptoms → disease + recommendations + related diseases + top real medicines |
+| POST | `/predict/risk` | JWT | Vitals → outcome likelihood |
+| GET | `/recommend/{disease}` | JWT | Knowledge-base entry for a disease |
+| GET | `/sentiment/{condition}` | JWT | Top drugs for a condition by review sentiment |
+| GET | `/admin/users` | JWT (Admin) | List users — role-based access control |
+| GET | `/health` | — | Liveness probe |
+
+Example:
+
+```bash
+TOKEN=$(curl -s -X POST localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}' | jq -r .access_token)
+
+curl -X POST localhost:8000/predict/disease \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"symptoms":["continuous_sneezing","chills","watering_from_eyes"]}'
+```
+
+Set `API_JWT_SECRET` in production (a dev fallback is used otherwise).
+
+---
+
 ## 🛠️ Tech stack
 
 - **Python** · pandas · NumPy
@@ -128,7 +167,7 @@ Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 
 ## 🔮 Future enhancements
 
-- REST API backend (Flask / FastAPI) with **JWT-token authentication** and a hosted PostgreSQL database (current storage is SQLite through a plain-SQL layer, so the swap is a connection change, not a rewrite).
+- ~~REST API backend with JWT-token authentication~~ ✅ **Done** — see the REST API section above. Remaining: a hosted PostgreSQL database (current storage is SQLite through a plain-SQL layer, so the swap is a connection change, not a rewrite).
 - Larger, real-world clinical datasets and probability calibration.
 - **Graph-based recommendations** (medical knowledge graphs) and **reinforcement learning** from user feedback.
 - TensorFlow/PyTorch deep-learning models (an sklearn MLP neural network is already included in the comparison).
