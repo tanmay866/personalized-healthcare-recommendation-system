@@ -1,6 +1,6 @@
 # 🩺 Personalized Healthcare & Medicine Recommendation System
 
-**🔴 Live demo: [personalized-healthcare-recommendation-system.streamlit.app](https://personalized-healthcare-recommendation-system.streamlit.app)** — log in with `admin` / `admin123` or sign up.
+**🔴 Live demo: [personalized-healthcare-recommendation-system.streamlit.app](https://personalized-healthcare-recommendation-system.streamlit.app)** — sign up for a free account and try it.
 
 A machine-learning system that predicts a likely **disease from a patient's symptoms**, recommends **medicines, precautions, diet, lifestyle changes, and the right specialist**, and provides a **personalized health-risk screening** from patient vitals.
 
@@ -132,7 +132,7 @@ streamlit run app/app.py
 
 Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 
-**Login:** create your own account via *Sign up*, or use the demo admin: `admin` / `admin123` (admins additionally see all-user activity in the Analytics Dashboard).
+**Login:** create your own account via *Sign up*. An admin account (sees all-user activity in the Analytics Dashboard) is seeded automatically; its password comes from the `ADMIN_PASSWORD` environment variable / Streamlit secret.
 
 ---
 
@@ -166,7 +166,7 @@ Example:
 ```bash
 TOKEN=$(curl -s -X POST localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"admin123"}' | jq -r .access_token)
+  -d '{"username":"<your-username>","password":"<your-password>"}' | jq -r .access_token)
 
 curl -X POST localhost:8000/predict/disease \
   -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \

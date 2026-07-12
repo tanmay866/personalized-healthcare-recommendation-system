@@ -9,12 +9,14 @@ A production system would add JWT-based sessions and a hosted database — the
 storage layer in ``db.py`` speaks plain SQL, so moving to PostgreSQL is a
 connection-string change, not a rewrite.
 
-Default admin account (seeded on first run): admin / admin123
+An admin account is seeded on first run; its password comes from the
+ADMIN_PASSWORD environment variable (local-dev fallback: admin123).
 """
 
 from __future__ import annotations
 
 import hashlib
+import os
 import secrets
 from datetime import datetime, timezone
 
@@ -34,15 +36,21 @@ def _now() -> str:
 
 
 def _seed_admin() -> None:
-    """Create the default admin account if it doesn't exist yet."""
+    """Create the admin account if it doesn't exist yet.
+
+    The password comes from the ``ADMIN_PASSWORD`` environment variable /
+    Streamlit secret. The fallback is for local development only — in any
+    deployed environment, set the secret.
+    """
     if db.get_user("admin") is None:
         salt = secrets.token_hex(8)
+        password = os.environ.get("ADMIN_PASSWORD", "admin123")
         try:
             db.insert_user(
                 username="admin",
                 name="Administrator",
                 salt=salt,
-                password_hash=_hash("admin123", salt),
+                password_hash=_hash(password, salt),
                 role="Admin",
                 created=_now(),
             )

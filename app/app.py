@@ -15,7 +15,7 @@ Features
   dataset insights; admins additionally see user activity.
 
 Run:  streamlit run app/app.py
-Default admin: admin / admin123
+Admin password comes from the ADMIN_PASSWORD env var / Streamlit secret.
 """
 
 from __future__ import annotations
@@ -38,10 +38,11 @@ import streamlit as st
 # environment before the first db call (the engine is created lazily), so a
 # hosted PostgreSQL can be configured without code changes.
 try:
-    if "DATABASE_URL" in st.secrets:
-        os.environ.setdefault("DATABASE_URL", st.secrets["DATABASE_URL"])
+    for _secret in ("DATABASE_URL", "ADMIN_PASSWORD"):
+        if _secret in st.secrets:
+            os.environ.setdefault(_secret, st.secrets[_secret])
 except Exception:
-    pass  # no secrets file — default SQLite
+    pass  # no secrets file — local-dev defaults
 
 # Make src/ importable regardless of where Streamlit is launched from.
 ROOT = Path(__file__).resolve().parents[1]
@@ -254,7 +255,7 @@ if st.session_state.user is None:
                         st.rerun()
                     else:
                         st.error("Invalid username or password.")
-            st.caption("Demo admin account: `admin` / `admin123`")
+            st.caption("New here? Create a free account in the **Sign up** tab.")
         with signup_tab:
             with st.form("signup", border=True):
                 name = st.text_input("Full name")
