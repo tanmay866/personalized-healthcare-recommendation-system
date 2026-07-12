@@ -1,5 +1,7 @@
 # 🩺 Personalized Healthcare & Medicine Recommendation System
 
+**🔴 Live demo: [personalized-healthcare-recommendation-system.streamlit.app](https://personalized-healthcare-recommendation-system.streamlit.app)** — log in with `admin` / `admin123` or sign up.
+
 A machine-learning system that predicts a likely **disease from a patient's symptoms**, recommends **medicines, precautions, diet, lifestyle changes, and the right specialist**, and provides a **personalized health-risk screening** from patient vitals.
 
 > Built as a Data Science / ML internship project for **Zidio Development**.
