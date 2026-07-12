@@ -10,7 +10,7 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 
 | # | Feature | What it does |
 |---|---------|--------------|
-| 1 | **User Management** | Signup/login with salted-hash passwords, Admin/User roles, and per-user health profiles that prefill the risk form. |
+| 1 | **User Management** | Signup/login with salted-hash passwords stored in a **SQLite database**, Admin/User roles, and per-user health profiles that prefill the risk form. |
 | 2 | **Disease Prediction** | Enter your symptoms → ML model predicts the most likely disease (with confidence & top-3 alternatives). |
 | 3 | **Care Recommendations** | For the predicted disease: medicines, precautions, diet, workout/lifestyle tips, and which specialist to consult. |
 | 4 | **Content-Based Filtering** | "Related diseases" via cosine similarity between disease symptom profiles. |
@@ -73,6 +73,7 @@ personalized-healthcare-recommendation-system/
 │   ├── train_sentiment.py      # NLP sentiment model on drug reviews
 │   ├── build_knowledge_base.py # authors the recommendation KB
 │   ├── auth.py                 # users, roles, profiles, activity log
+│   ├── db.py                   # SQLite storage layer (users + activity)
 │   └── recommend.py            # inference layer used by the app
 ├── requirements.txt
 └── README.md
@@ -127,7 +128,7 @@ Then open the local URL Streamlit prints (usually `http://localhost:8501`).
 
 ## 🔮 Future enhancements
 
-- REST API backend (Flask / FastAPI) with **JWT-token authentication** and a real database (the current auth is session-based with hashed passwords in JSON — right-sized for a demo).
+- REST API backend (Flask / FastAPI) with **JWT-token authentication** and a hosted PostgreSQL database (current storage is SQLite through a plain-SQL layer, so the swap is a connection change, not a rewrite).
 - Larger, real-world clinical datasets and probability calibration.
 - **Graph-based recommendations** (medical knowledge graphs) and **reinforcement learning** from user feedback.
 - TensorFlow/PyTorch deep-learning models (an sklearn MLP neural network is already included in the comparison).

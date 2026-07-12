@@ -21,8 +21,14 @@ Default admin: admin / admin123
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
+
+# Fix: recent pyarrow builds segfault on macOS when their bundled mimalloc
+# allocator initializes from Streamlit's script-runner threads. Arrow reads
+# this env var lazily at first memory-pool use, which happens after this line.
+os.environ.setdefault("ARROW_DEFAULT_MEMORY_POOL", "system")
 
 import pandas as pd
 import plotly.graph_objects as go

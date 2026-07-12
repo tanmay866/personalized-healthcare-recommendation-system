@@ -11,6 +11,7 @@ __pycache__/
 data/tmp/
 
 # Runtime user data (accounts, activity log) — never commit
+data/app.db
 data/users.json
 data/user_activity.json
 
