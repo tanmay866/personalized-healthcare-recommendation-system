@@ -30,7 +30,7 @@ A machine-learning system that predicts a likely **disease from a patient's symp
 |---|---|
 | **Login & landing** ![Login](docs/screenshots/01_login.png) | **Disease prediction** ![Prediction](docs/screenshots/02_prediction.png) |
 | **Care recommendations** ![Recommendations](docs/screenshots/03_recommendations.png) | **Adaptive medicines (RL feedback)** ![Adaptive medicines](docs/screenshots/04_adaptive_medicines.png) |
-| **Knowledge graph** ![Knowledge graph](docs/screenshots/05_knowledge_graph.png) | **Risk screening** ![Risk screening](docs/screenshots/06_risk_screening.png) |
+| **Knowledge graph** ![Knowledge graph](docs/screenshots/05_knowledge_graph.png) | **Clinical risk calculators (real patient data)** ![Clinical risk calculators](docs/screenshots/06_risk_screening.png) |
 | **Sentiment explorer (NLP)** ![Sentiment explorer](docs/screenshots/07_sentiment_explorer.png) | **Analytics dashboard** ![Dashboard](docs/screenshots/08_dashboard.png) |
 
 ---
