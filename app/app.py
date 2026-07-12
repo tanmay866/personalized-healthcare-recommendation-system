@@ -113,12 +113,29 @@ st.markdown(
           background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220,38,38,0.3);
           border-radius: 8px; padding: 0.7rem 1rem; font-size: 0.85rem; color:#b91c1c;
       }
+      .watermark {
+          position: fixed; bottom: 12px; right: 16px; z-index: 9999;
+          background: rgba(15, 23, 42, 0.75); color: #e2e8f0;
+          padding: 4px 12px; border-radius: 999px; font-size: 0.75rem;
+          letter-spacing: 0.02em; pointer-events: none;
+      }
+      .creator-card {
+          background: linear-gradient(135deg, rgba(37,99,235,0.08), rgba(14,165,233,0.08));
+          border: 1px solid rgba(37,99,235,0.25); border-radius: 12px;
+          padding: 1.2rem 1.4rem;
+      }
       .role-badge {
           display:inline-block; background:#0ea5e9; color:#fff; font-size:0.72rem;
           padding:1px 8px; border-radius:999px; vertical-align:middle; margin-left:6px;
       }
     </style>
     """,
+    unsafe_allow_html=True,
+)
+
+# Ownership watermark — rendered on every page (login and all tabs).
+st.markdown(
+    '<div class="watermark">⚕️ Created by Tanmay Patel</div>',
     unsafe_allow_html=True,
 )
 
@@ -374,6 +391,10 @@ if st.session_state.user is None:
             "Always consult a qualified doctor.</div>",
             unsafe_allow_html=True,
         )
+        st.caption(
+            "Created by **Tanmay Patel** · "
+            "[GitHub](https://github.com/tanmay866/personalized-healthcare-recommendation-system)"
+        )
     st.stop()
 
 user = st.session_state.user
@@ -428,16 +449,18 @@ with st.sidebar:
         "Not a substitute for professional medical advice.</div>",
         unsafe_allow_html=True,
     )
+    st.caption("© 2026 Tanmay Patel · All rights reserved")
 
 st.markdown('<p class="main-title">Personalized Healthcare & Medicine Recommendation System</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Machine-learning powered disease prediction, care recommendations, risk screening and review analytics.</p>', unsafe_allow_html=True)
 
-tab1, tab2, tab3, tab4 = st.tabs(
+tab1, tab2, tab3, tab4, tab5 = st.tabs(
     [
         "🔬  Disease Prediction",
         "📊  Health Risk Screening",
         "💬  Medicine Sentiment",
         "📈  Analytics Dashboard",
+        "ℹ️  About",
     ]
 )
 
@@ -904,3 +927,80 @@ with tab4:
             st.dataframe(hdf, width="stretch", hide_index=True)
         else:
             st.info("No history yet — make a prediction!")
+
+# =========================================================================== #
+# Tab 5 — about
+# =========================================================================== #
+with tab5:
+    a1, a2 = st.columns([1.6, 1])
+    with a1:
+        st.subheader("About this application")
+        st.markdown(
+            """
+            A full-stack machine-learning system that predicts a likely disease
+            from a patient's symptoms, recommends **medicines, precautions, diet
+            and the right specialist**, screens **health risk** with models
+            trained on **real clinical data**, and adapts its medicine ranking
+            to user feedback with **reinforcement learning**.
+
+            **How the pieces fit together:**
+            1. 🔬 **Disease predictor** — RandomForest over 132 symptoms → 41
+               diseases (4,920 training records).
+            2. ❤️🩸 **Clinical risk calculators** — trained on real patients:
+               UCI Cleveland heart data (303) and Pima diabetes data (768),
+               with proper handling of real-world missing values.
+            3. 💬 **NLP sentiment engine** — TF-IDF + Logistic Regression over
+               **215K real drug reviews**, powering medicine rankings.
+            4. 🕸 **Medical knowledge graph** — 307 nodes; Personalized
+               PageRank finds related diseases through shared symptoms,
+               medications and specialists.
+            5. 🎰 **RL feedback bandit** — Thompson sampling re-ranks
+               medicines as users vote 👍/👎.
+            6. 🔐 **Production backing** — hosted PostgreSQL, salted-hash
+               auth with roles, persistent sessions, plus a JWT-secured
+               REST API (FastAPI).
+            """
+        )
+        st.markdown("##### Model performance")
+        st.markdown(
+            """
+            | Model | Data | Result |
+            |---|---|---|
+            | Disease predictor | 4,920 records · 41 diseases | 100% test accuracy |
+            | ❤️ Heart risk | 303 real patients (UCI Cleveland) | AUC 0.95 · 87% |
+            | 🩸 Diabetes risk | 768 real patients (Pima) | AUC 0.81 · 71% |
+            | Review sentiment (NLP) | 215K drugs.com reviews | 90% · F1 0.93 |
+            | Outcome screening | symptoms + vitals | 80% vs 52% baseline |
+            """
+        )
+        st.caption(
+            "Tech: Python · scikit-learn · XGBoost · TensorFlow (comparison) · "
+            "NetworkX · FastAPI · SQLAlchemy · PostgreSQL · Streamlit · Plotly"
+        )
+    with a2:
+        st.markdown(
+            """
+            <div class="creator-card">
+              <h4 style="margin:0 0 0.4rem 0">👨‍💻 Created by</h4>
+              <p style="font-size:1.35rem; font-weight:800; margin:0 0 0.6rem 0">
+                Tanmay Patel</p>
+              <p style="margin:0 0 0.3rem 0">Data Science & Machine Learning</p>
+              <p style="margin:0 0 0.8rem 0; color:#64748b">
+                Built end-to-end as an ML internship project at
+                <b>Zidio Development</b> — from raw datasets to a deployed,
+                database-backed product.</p>
+              <p style="margin:0">
+                🔗 <a href="https://github.com/tanmay866/personalized-healthcare-recommendation-system"
+                target="_blank">GitHub repository</a></p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.write("")
+        st.markdown(
+            '<div class="disclaimer">⚠️ Educational project — not a medical '
+            "device. Predictions and recommendations are illustrative; always "
+            "consult a qualified doctor.</div>",
+            unsafe_allow_html=True,
+        )
+        st.caption("© 2026 Tanmay Patel · All rights reserved")
